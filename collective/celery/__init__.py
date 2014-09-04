@@ -15,8 +15,8 @@ import transaction
 import logging
 from collective.celery.utils import getCelery, getApp
 from OFS.interfaces import IItem
-from Products.CMFPlone.interfaces.siteroot import IPloneSiteRoot
 from plone import api
+from Products.CMFPlone.interfaces.siteroot import IPloneSiteRoot
 
 
 logger = logging.getLogger('collective.celery')
@@ -85,36 +85,33 @@ class FunctionRunner(object):
         self.func = func
         self.new_func = new_func
         self.userid = None
+        self.site = None
+        self.app = None
 
-    def serialize_args(self, app, orig_args, orig_kw):
+    def deserialize_args(self):
         args = []
         kw = {}
-        for arg in orig_args:
-            args.append(_serialize_arg(arg))
-        for key, value in orig_kw.items():
-            kw[key] = _serialize_arg(value)
+        for arg in self.orig_args:
+            args.append(_deserialize_arg(self.app, arg))
+        for key, value in self.orig_kw.items():
+            kw[key] = _deserialize_arg(self.app, value)
 
-        self.userid = kw.pop('authorized_userid')
         if len(args) == 0 or not IPloneSiteRoot.providedBy(args[0]):
-            site = app.unrestrictedTraverse(kw.pop('site_path'))
-            args = [site] + args
-        else:
-            kw.pop('site_path')
+            args = [self.site] + args
         return args, kw
 
-    def before_run(self, app, args, kw):
-        pass
-
-    def after_run(self, app):
+    def authorize(self):
         pass
 
     def __call__(self):
-        app = makerequest(getApp())
+        self.app = makerequest(getApp())
         transaction.begin()
         try:
             try:
-                args, kw = self.serialize_args(app, self.orig_args, self.orig_kw)  # noqa
-                self.before_run(app, args, kw)
+                self.userid = self.orig_kw.pop('authorized_userid')
+                self.site = self.app.unrestrictedTraverse(self.orig_kw.pop('site_path'))  # noqa
+                self.authorize()
+                args, kw = self.deserialize_args()  # noqa
                 # run the task
                 result = self.func(*args, **kw)
                 # commit transaction
@@ -127,38 +124,36 @@ class FunctionRunner(object):
                 transaction.abort()
                 raise
         finally:
-            self.after_run(app)
-            app._p_jar.close()
+            noSecurityManager()
+            setSite(None)
+            self.app._p_jar.close()
 
         return result
 
 
 class AuthorizedFunctionRunner(FunctionRunner):
 
-    def before_run(self, app, args, kw):
-        site = args[0]
-        notify(BeforeTraverseEvent(site, site.REQUEST))
-        setSite(site)
+    def authorize(self):
+        notify(BeforeTraverseEvent(self.site, self.site.REQUEST))
+        setSite(self.site)
 
         # set up admin user
-        user = site.acl_users.getUserById(self.userid)
+        user = api.user.get(self.userid).getUser()
         newSecurityManager(None, user)
-
-    def after_run(self, app):
-        noSecurityManager()
-        setSite(None)
 
 
 class AdminFunctionRunner(AuthorizedFunctionRunner):
 
-    def before_run(self, app, args, kw):
-        site = args[0]
-        notify(BeforeTraverseEvent(site, site.REQUEST))
-        setSite(site)
+    def authorize(self):
+        notify(BeforeTraverseEvent(self.site, self.site.REQUEST))
+        setSite(self.site)
 
         # set up admin user
-        user = app.acl_users.getUserById('admin')
-        newSecurityManager(None, user)
+        # XXX need to search for an admin like user otherwise?
+        user = api.user.get('admin')
+        if user:
+            user = user.getUser()
+            newSecurityManager(None, user)
 
 
 class _task(object):
@@ -173,7 +168,7 @@ class _task(object):
     ZODB conflict errors.
     """
 
-    def authorized(self, func, **task_kw):
+    def __call__(self, func, **task_kw):
         def new_func(*args, **kw):
             runner = AuthorizedFunctionRunner(func, new_func, args, kw)
             return runner()

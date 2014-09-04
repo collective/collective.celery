@@ -49,18 +49,21 @@ Creating tasks
 
 This package comes with two decorators to use for creating tasks.
 
+default
+  run the task as the user who created the task
 as_admin
   run the task as an admin
-authorized
-  run the task as the user who created the task
-
 
 Example::
 
     from collective.celery import task
-    @task.as_admin
-    def do_something(portal, arg1, foo='bar'):
+    @task
+    def do_something_authorized(portal, arg1, foo='bar'):
         pass
+    @task.as_admin
+    def do_something_as_admin(portal, arg1, foo='bar'):
+        pass
+
 
 And to schedule the taks::
 
