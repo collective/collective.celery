@@ -57,7 +57,7 @@ authorized
 
 Example::
 
-    from collective.celery import tasks
+    from collective.celery import task
     @task.as_admin
     def do_something(portal, arg1, foo='bar'):
         pass
