@@ -82,8 +82,9 @@ def getApp(*args, **kwargs):
     if Zope2.bobo_application is None:
         orig_argv = sys.argv
         sys.argv = ['']
-        return Zope2.app(*args, **kwargs)
+        res = Zope2.app(*args, **kwargs)
         sys.argv = orig_argv
+        return res
     # should set bobo_application
     # man, freaking zope2 is weird
     return Zope2.bobo_application(*args, **kwargs)
