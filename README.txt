@@ -57,10 +57,10 @@ as_admin
 Example::
 
     from collective.celery import task
-    @task
+    @task()
     def do_something_authorized(portal, arg1, foo='bar'):
         pass
-    @task.as_admin
+    @task.as_admin()
     def do_something_as_admin(portal, arg1, foo='bar'):
         pass
 

@@ -79,7 +79,7 @@ class FunctionRunner(object):
 
     base_task = AfterCommitTask
 
-    def __init__(self, func, new_func, orig_args, orig_kw):
+    def __init__(self, func, new_func, orig_args, orig_kw, task_kw):
         self.orig_args = orig_args
         self.orig_kw = orig_kw
         self.func = func
@@ -87,6 +87,7 @@ class FunctionRunner(object):
         self.userid = None
         self.site = None
         self.app = None
+        self.task_kw = task_kw
 
     def deserialize_args(self):
         args = []
@@ -96,8 +97,11 @@ class FunctionRunner(object):
         for key, value in self.orig_kw.items():
             kw[key] = _deserialize_arg(self.app, value)
 
-        if len(args) == 0 or not IPloneSiteRoot.providedBy(args[0]):
-            args = [self.site] + args
+        site_pos = 0
+        if self.task_kw.get('bind'):
+            site_pos = 1
+        if len(args) == site_pos or not IPloneSiteRoot.providedBy(args[site_pos]):  # noqa
+            args.insert(site_pos, self.site)
         return args, kw
 
     def authorize(self):
@@ -168,18 +172,21 @@ class _task(object):
     ZODB conflict errors.
     """
 
-    def __call__(self, func, **task_kw):
-        def new_func(*args, **kw):
-            runner = AuthorizedFunctionRunner(func, new_func, args, kw)
-            return runner()
-        new_func.__name__ = func.__name__
-        return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+    def __call__(self, **task_kw):
+        def decorator(func):
+            def new_func(*args, **kw):
+                runner = AuthorizedFunctionRunner(func, new_func, args, kw, task_kw)  # noqa
+                return runner()
+            new_func.__name__ = func.__name__
+            return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+        return decorator
 
-    def as_admin(self, func, **task_kw):
-        def new_func(*args, **kw):
-            runner = AdminFunctionRunner(func, new_func, args, kw)
-            return runner()
-        new_func.__name__ = func.__name__
-        return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
-
+    def as_admin(self, **task_kw):
+        def decorator(func):
+            def new_func(*args, **kw):
+                runner = AdminFunctionRunner(func, new_func, args, kw, task_kw)
+                return runner()
+            new_func.__name__ = func.__name__
+            return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+        return decorator
 task = _task()
