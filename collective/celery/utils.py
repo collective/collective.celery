@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 from celery.app import defaults
@@ -44,22 +45,27 @@ _options = dict(
 
 
 def getCeleryOptions():
-    config = {}
     zconfig = getConfiguration()
     if hasattr(zconfig, 'environment'):
-        for key, value in zconfig.environment.items():
-            opt_type = _options.get(key)
-            if opt_type:
-                if opt_type[0] == str:
-                    value = value.replace('"', '')
-                elif opt_type[0] is object:
-                    try:
-                        value = eval(value)
-                    except:
-                        pass  # any can be anything; even a string
-                elif not isinstance(value, opt_type[0]):
-                    value = opt_type[1](value)
-            config[key] = value
+        environ = zconfig.environment.items()
+    else:
+        # sort of for testing...
+        environ = os.environ.items()
+
+    config = {}
+    for key, value in environ:
+        opt_type = _options.get(key)
+        if opt_type:
+            if opt_type[0] == str:
+                value = value.replace('"', '')
+            elif opt_type[0] is object:
+                try:
+                    value = eval(value)
+                except:
+                    pass  # any can be anything; even a string
+            elif not isinstance(value, opt_type[0]):
+                value = opt_type[1](value)
+        config[key] = value
     return config
 
 
