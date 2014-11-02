@@ -8,6 +8,8 @@ from AccessControl.SecurityManagement import noSecurityManager
 from Testing.makerequest import makerequest
 from ZODB.POSException import ConflictError
 from celery import Task
+from celery.result import AsyncResult
+from kombu.utils import uuid
 from zope.app.publication.interfaces import BeforeTraverseEvent
 from zope.component.hooks import setSite
 from zope.event import notify
@@ -68,11 +70,25 @@ class AfterCommitTask(Task):
         args, kw = self.serialize_args(args, kwargs)
         kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
         kw['authorized_userid'] = api.user.get_current().getId()
+        # Here we cheat a little: since we will not start the task
+        # up until the transaction is done,
+        # we cannot give back to whoever called apply_async
+        # its much beloved AsyncResult.
+        # But we can actually pass the task a specific task_id
+        # (although it's not very documented)
+        # and an AsyncResult at this point is just that id, basically.
+        task_id = uuid()
 
         def hook(success):
             if success:
-                super(AfterCommitTask, self).apply_async(args=args, kwargs=kw)
+                super(AfterCommitTask, self).apply_async(
+                    args=args,
+                    kwargs=kw,
+                    task_id=task_id
+                )
         transaction.get().addAfterCommitHook(hook)
+        # Return the "fake" result ID
+        return AsyncResult(task_id)
 
 
 class FunctionRunner(object):
