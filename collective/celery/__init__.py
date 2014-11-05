@@ -1,7 +1,6 @@
-"""
-This is all pulled out of David Glick's gist on github
-https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py  # noqa
-"""
+# -*- encoding: utf-8 -*-
+# This is all pulled out of David Glick's gist on github
+# https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py
 
 from AccessControl.SecurityManagement import newSecurityManager
 from AccessControl.SecurityManagement import noSecurityManager
@@ -217,4 +216,16 @@ class _task(object):
             new_func.__name__ = func.__name__
             return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
         return decorator
+
 task = _task()
+task.__doc__ = """This decorator "wraps" the celery task decorator
+:py:meth:`celery.app.base.Celery.task`.
+
+It can be used the same way or through the additional ``as_admin()`` method::
+
+    @task.as_admin()
+    def mytask():
+        pass
+
+Which will execute the task in an unrestricted environment.
+"""
