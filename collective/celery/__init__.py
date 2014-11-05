@@ -3,6 +3,7 @@ This is all pulled out of David Glick's gist on github
 https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py  # noqa
 """
 
+import threading
 from AccessControl.SecurityManagement import newSecurityManager
 from AccessControl.SecurityManagement import noSecurityManager
 from Testing.makerequest import makerequest
@@ -11,6 +12,7 @@ from celery import Task
 from celery.result import AsyncResult
 from kombu.utils import uuid
 from zope.app.publication.interfaces import BeforeTraverseEvent
+from zope.interface import implementer
 from zope.component.hooks import setSite
 from zope.event import notify
 import transaction
@@ -47,6 +49,48 @@ def _deserialize_arg(app, val):
     return val
 
 
+@implementer(transaction.interfaces.IDataManager)
+class DataManager(object):
+
+    def __init__(self):
+        self.queue = []
+
+    def add_task(self, task, args, kwargs, task_id):
+        self.queue.append((
+            task,
+            args,
+            kwargs,
+            task_id
+        ))
+
+    def commit(self, t):
+        while len(self.queue) > 0:
+            task, args, kwargs, task_id = self.queue.pop(0)
+            task.apply_async(
+                args=args,
+                kwargs=kwargs,
+                task_id=task_id
+            )
+
+    def sortKey(self):
+        return '~collective.celery'
+
+    def abort(self, t):
+        pass
+
+    def tpc_begin(self, t):
+        pass
+
+    def tpc_vote(self, t):
+        pass
+
+    def tpc_finish(self, t):
+        pass
+
+    def tpc_abort(self, t):
+        pass
+
+
 class AfterCommitTask(Task):
     """Base for tasks that queue themselves after commit.
 
@@ -79,14 +123,19 @@ class AfterCommitTask(Task):
         # and an AsyncResult at this point is just that id, basically.
         task_id = uuid()
 
-        def hook(success):
-            if success:
-                super(AfterCommitTask, self).apply_async(
-                    args=args,
-                    kwargs=kw,
-                    task_id=task_id
-                )
-        transaction.get().addAfterCommitHook(hook)
+        txn = transaction.get()
+        task_datamanager = None
+        # We first search for an already existing transaction manager
+        # to which append our task, failing to find one,
+        # we create and join a new one
+        for dm in txn._resources:
+            if dm.sortKey() == '~collective.celery':
+                task_datamanager = dm
+        if task_datamanager is None:
+            task_datamanager = DataManager()
+            txn.join(task_datamanager)
+        task_datamanager.add_task(self, args, kw, task_id)
+
         # Return the "fake" result ID
         return AsyncResult(task_id)
 
