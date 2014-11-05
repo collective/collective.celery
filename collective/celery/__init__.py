@@ -66,7 +66,7 @@ class DataManager(object):
     def commit(self, t):
         while len(self.queue) > 0:
             task, args, kwargs, task_id = self.queue.pop(0)
-            task.apply_async(
+            task(
                 args=args,
                 kwargs=kwargs,
                 task_id=task_id
@@ -134,7 +134,12 @@ class AfterCommitTask(Task):
         if task_datamanager is None:
             task_datamanager = DataManager()
             txn.join(task_datamanager)
-        task_datamanager.add_task(self, args, kw, task_id)
+        task_datamanager.add_task(
+            super(AfterCommitTask, self).apply_async,
+            args,
+            kw,
+            task_id
+        )
 
         # Return the "fake" result ID
         return AsyncResult(task_id)
