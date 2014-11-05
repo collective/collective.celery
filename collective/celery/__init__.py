@@ -79,6 +79,18 @@ class AfterCommitTask(Task):
         # and an AsyncResult at this point is just that id, basically.
         task_id = uuid()
 
+        # Note: one might be tempted to turn this into a datamanager.
+        # This would result in two wrong things happening:
+        # * A "commit within a commit" triggered by the function runner
+        #   when CELERY_ALWAYS_EAGER is set,
+        #   leading to the first invoked commit cleanup failing
+        #   because the inner commit already cleaned up.
+        # * An async task failing in eager mode would also rollback
+        #   the whole transaction, which is not desiderable.
+        #   Consider the case where the syncronous code constructs an object
+        #   and the async task updates it, if we roll back everything
+        #   then also the original content construction goes away
+        #   (even if, in and by itself, worked)
         def hook(success):
             if success:
                 super(AfterCommitTask, self).apply_async(
