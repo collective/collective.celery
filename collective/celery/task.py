@@ -9,6 +9,12 @@ import transaction
 from utils import _serialize_arg
 
 
+class EagerResult(result.EagerResult):
+
+    def ready(self):
+        return self._state in states.READY_STATES
+
+
 class AfterCommitTask(Task):
     """Base for tasks that queue themselves after commit.
 
@@ -71,12 +77,13 @@ class AfterCommitTask(Task):
                     result_._state = effective_result._state
                     result_._result = effective_result._result
                     result_._traceback = effective_result._traceback
+                    celery.backend.store_result(
+                        task_id,
+                        effective_result._result,
+                        effective_result._state,
+                        traceback=result_.traceback,
+                        request=self.request
+                    )
         transaction.get().addAfterCommitHook(hook)
         # Return the "fake" result ID
         return result_
-
-
-class EagerResult(result.EagerResult):
-
-    def ready(self):
-        return self._state in states.READY_STATES

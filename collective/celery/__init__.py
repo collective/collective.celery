@@ -1,9 +1,6 @@
 # -*- encoding: utf-8 -*-
 # This is all pulled out of David Glick's gist on github
 # https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py
-
-from celery import result
-from celery import states
 import logging
 from collective.celery.utils import getCelery
 

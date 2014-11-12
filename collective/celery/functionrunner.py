@@ -11,6 +11,7 @@ from ZODB.POSException import ConflictError
 from task import AfterCommitTask
 from utils import _deserialize_arg
 
+
 class FunctionRunner(object):
 
     base_task = AfterCommitTask

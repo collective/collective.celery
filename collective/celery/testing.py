@@ -1,16 +1,19 @@
 from plone.testing import Layer
-from collective.celery.utils import getCelery, _getCelery
+from collective.celery.utils import getCelery
 
 
 class CeleryTestLayer(Layer):
 
     def setUp(self):
-        getCelery().conf['CELERY_ALWAYS_EAGER'] = 'True'
+        celery = getCelery()
+        celery.conf.CELERY_ALWAYS_EAGER = True
         # use in-memory sqlite
-        getCelery().conf['BROKER_URL'] = "sqla+sqlite://"
-        getCelery().conf['CELERY_RESULT_BACKEND'] = "db+sqlite://"
+        celery.conf.CELERY_RESULT_BACKEND = 'cache'
+        celery.conf.CELERY_CACHE_BACKEND = "memory://"
         # refresh cached properties
-        _getCelery()
-        
+        del(celery.backend)
+        for name, task in celery.tasks.items():
+            task.backend = celery.backend
+
 
 CELERY = CeleryTestLayer()
