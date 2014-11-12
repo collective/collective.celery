@@ -162,7 +162,6 @@ class FunctionRunner(object):
                 self.authorize()
                 args, kw = self.deserialize_args()  # noqa
                 # run the task
-                import pdb; pdb.set_trace( )
                 result = self.func(*args, **kw)
                 # commit transaction
                 transaction.commit()
@@ -187,7 +186,10 @@ class AuthorizedFunctionRunner(FunctionRunner):
         notify(BeforeTraverseEvent(self.site, self.site.REQUEST))
         setSite(self.site)
 
-        # set up admin user
+        # set up user
+        # TODO: using plone.api.get_user().getUser()
+        # somehow makes the test fail, probably because the whole setRoles
+        # and login() don't do everything.
         user = self.site['acl_users'].getUserById(self.userid)
         newSecurityManager(None, user)
 
@@ -200,9 +202,8 @@ class AdminFunctionRunner(AuthorizedFunctionRunner):
 
         # set up admin user
         # XXX need to search for an admin like user otherwise?
-        user = api.user.get('admin')
+        user = self.site['acl_users'].getUserById('admin')
         if user:
-            user = user.getUser()
             newSecurityManager(None, user)
 
 
