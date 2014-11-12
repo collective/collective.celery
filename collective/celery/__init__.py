@@ -142,11 +142,12 @@ class FunctionRunner(object):
         for key, value in self.orig_kw.items():
             kw[key] = _deserialize_arg(self.app, value)
 
-        site_pos = 0
-        if self.task_kw.get('bind'):
-            site_pos = 1
-        if len(args) == site_pos or not IPloneSiteRoot.providedBy(args[site_pos]):  # noqa
-            args.insert(site_pos, self.site)
+        # TO BE DISCUSSED: why do we need to pass site object here ?
+        # site_pos = 0
+        # if self.task_kw.get('bind'):
+        #     site_pos = 1
+        # if len(args) == site_pos or not IPloneSiteRoot.providedBy(args[site_pos]):  # noqa
+        #     args.insert(site_pos, self.site)
         return args, kw
 
     def authorize(self):
