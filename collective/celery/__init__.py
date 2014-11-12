@@ -7,7 +7,8 @@ from AccessControl.SecurityManagement import noSecurityManager
 from Testing.makerequest import makerequest
 from ZODB.POSException import ConflictError
 from celery import Task
-from celery.result import AsyncResult
+from celery import result
+from celery import states
 from kombu.utils import uuid
 from zope.app.publication.interfaces import BeforeTraverseEvent
 from zope.component.hooks import setSite
@@ -46,6 +47,12 @@ def _deserialize_arg(app, val):
     return val
 
 
+class EagerResult(result.EagerResult):
+
+    def ready(self):
+        return self._state in states.READY_STATES
+
+
 class AfterCommitTask(Task):
     """Base for tasks that queue themselves after commit.
 
@@ -69,6 +76,7 @@ class AfterCommitTask(Task):
         args, kw = self.serialize_args(args, kwargs)
         kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
         kw['authorized_userid'] = api.user.get_current().getId()
+        celery = getCelery()
         # Here we cheat a little: since we will not start the task
         # up until the transaction is done,
         # we cannot give back to whoever called apply_async
@@ -77,6 +85,12 @@ class AfterCommitTask(Task):
         # (although it's not very documented)
         # and an AsyncResult at this point is just that id, basically.
         task_id = uuid()
+
+        # Construct a fake result
+        if celery.conf.CELERY_ALWAYS_EAGER:
+            result_ = EagerResult(task_id, None, states.PENDING, None)
+        else:
+            result_ = result.AsyncResult(task_id)
 
         # Note: one might be tempted to turn this into a datamanager.
         # This would result in two wrong things happening:
@@ -92,14 +106,18 @@ class AfterCommitTask(Task):
         #   (even if, in and by itself, worked)
         def hook(success):
             if success:
-                super(AfterCommitTask, self).apply_async(
+                effective_result = super(AfterCommitTask, self).apply_async(
                     args=args,
                     kwargs=kw,
                     task_id=task_id
                 )
+                if celery.conf.CELERY_ALWAYS_EAGER:
+                    result_._state = effective_result._state
+                    result_._result = effective_result._result
+                    result_._traceback = effective_result._traceback
         transaction.get().addAfterCommitHook(hook)
         # Return the "fake" result ID
-        return AsyncResult(task_id)
+        return result_
 
 
 class FunctionRunner(object):
@@ -221,7 +239,13 @@ task = _task()
 task.__doc__ = """This decorator "wraps" the celery task decorator
 :py:meth:`celery.app.base.Celery.task`.
 
-It can be used the same way or through the additional ``as_admin()`` method::
+It can be used the same way::
+
+    @task()
+    def mytask():
+        pass
+
+or through the additional ``as_admin()`` method::
 
     @task.as_admin()
     def mytask():
