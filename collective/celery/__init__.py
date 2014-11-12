@@ -162,6 +162,7 @@ class FunctionRunner(object):
                 self.authorize()
                 args, kw = self.deserialize_args()  # noqa
                 # run the task
+                import pdb; pdb.set_trace( )
                 result = self.func(*args, **kw)
                 # commit transaction
                 transaction.commit()
@@ -187,7 +188,7 @@ class AuthorizedFunctionRunner(FunctionRunner):
         setSite(self.site)
 
         # set up admin user
-        user = api.user.get(self.userid).getUser()
+        user = self.site['acl_users'].getUserById(self.userid)
         newSecurityManager(None, user)
 
 
