@@ -186,8 +186,8 @@ class AuthorizedFunctionRunner(FunctionRunner):
         notify(BeforeTraverseEvent(self.site, self.site.REQUEST))
         setSite(self.site)
 
-        # set up admin user
-        user = api.user.get(self.userid).getUser()
+        # set up user
+        user = self.site['acl_users'].getUserById(self.userid)
         newSecurityManager(None, user)
 
 
