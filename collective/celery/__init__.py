@@ -5,7 +5,7 @@ import logging
 from collective.celery.utils import getCelery
 
 from functionrunner import AdminFunctionRunner, AuthorizedFunctionRunner
-from task import AfterCommitTask
+from base_task import AfterCommitTask
 
 logger = logging.getLogger('collective.celery')
 
