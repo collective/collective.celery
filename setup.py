@@ -31,7 +31,8 @@ setup(name='collective.celery',
       ],
       extras_require={
           'test': [
-              'plone.app.testing'
+              'plone.app.testing',
+              'SQLAlchemy'
           ]
       },
       entry_points="""
