@@ -248,5 +248,5 @@ texinfo_documents = [
 
 intersphinx_mapping = {
     'python': ('http://docs.python.org/2.7', None),
-    'celery': ('http://celery.readthedocs.org/en/latest', None)
+    'celery': ('http://docs.celeryproject.org/en/latest', None)
 }

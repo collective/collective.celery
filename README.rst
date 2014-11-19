@@ -75,8 +75,15 @@ And to schedule the taks::
     my_content_object = self.context
     do_something.delay(my_content_object, 'something', foo='bar')
 
+Or alternatively::
+
+    my_content_object = self.context
+    do_something.apply_async((my_content_object, 'something'), {'foo': 'bar'})
+
+Check out :ref:`calliung tasks <celery:calling-guide>` in the celery documentation for more details.
+
 .. note::
-   You do not need to specify a context object: the system will already set up the correct site and all that in the worker.
+   You do not need to specify a context object if you don't use it for anything meaningful in the task: the system will already set up the correct site and if you just need that you can obtain it easily (maybe via ``plone.api``).
 
 
 Starting the task runner
@@ -147,3 +154,5 @@ Further documentation
    :maxdepth: 2
 
    execution-model
+   using-task-class
+   tips-and-tricks
