@@ -1,7 +1,25 @@
 from plone.app.testing import PloneSandboxLayer, PLONE_FIXTURE, \
     IntegrationTesting
-from plone.testing import z2
+from plone.testing import z2, Layer
 from zope.configuration import xmlconfig
+from .utils import getCelery
+
+
+class CeleryTestLayer(Layer):
+
+    def setUp(self):
+        celery = getCelery()
+        celery.conf.CELERY_ALWAYS_EAGER = True
+        # use in-memory sqlite
+        celery.conf.CELERY_RESULT_BACKEND = 'cache'
+        celery.conf.CELERY_CACHE_BACKEND = "memory://"
+        # refresh cached properties
+        del(celery.backend)
+        for name, task in celery.tasks.items():
+            task.backend = celery.backend
+
+
+CELERY = CeleryTestLayer()
 
 
 class CollectiveCeleryLayer(PloneSandboxLayer):

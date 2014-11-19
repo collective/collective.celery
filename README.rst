@@ -96,6 +96,7 @@ The package simply provides a wrapper around the default task runner script whic
 .. note::
    In order for the worker to start correctly, you should have a ZEO server setup. Else the worker will fail stating it cannot obtain a lock on the database.
 
+.. _developing-and-testing:
 
 Developing and testing
 ----------------------
