@@ -7,7 +7,6 @@
     :show-inheritance:
 
     .. autodata:: task
-       :annotation:
 
 
 .. automodule:: collective.celery.base_task
