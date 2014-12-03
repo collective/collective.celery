@@ -12,6 +12,7 @@ from App.config import getConfiguration
 from celery import current_app as celery
 import threading
 import Zope2
+from OFS.interfaces import IItem
 
 
 _local = threading.local()
@@ -42,6 +43,8 @@ _options = dict(
     (key, _types[opt.type])
     for key, opt in defaults.flatten(defaults.NAMESPACES)
 )
+
+_object_marker = 'object://'
 
 
 def getCeleryOptions():
@@ -96,3 +99,19 @@ def getApp(*args, **kwargs):
     # should set bobo_application
     # man, freaking zope2 is weird
     return Zope2.bobo_application(*args, **kwargs)
+
+
+def _serialize_arg(val):
+    if IItem.providedBy(val):
+        val = '%s%s' % (
+            _object_marker,
+            '/'.join(val.getPhysicalPath()))
+    return val
+
+
+def _deserialize_arg(app, val):
+    if isinstance(val, basestring):
+        if val.startswith(_object_marker):
+            val = val[len(_object_marker):]
+            val = app.restrictedTraverse(val)
+    return val

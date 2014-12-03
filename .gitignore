@@ -1,0 +1,11 @@
+.installed.cfg
+.mr.developer.cfg
+bin
+develop-eggs
+docs/html
+include
+lib
+parts
+var
+*.pyc
+*.egg-info

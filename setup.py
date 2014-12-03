@@ -7,8 +7,8 @@ setup(name='collective.celery',
       version=version,
       description="",
       long_description="%s\n%s" % (
-          open("README.txt").read(),
-          open(os.path.join("docs", "HISTORY.txt")).read()
+          open("README.rst").read(),
+          open(os.path.join("docs", "CHANGES.rst")).read()
       ),
       # Get more strings from
       # http://pypi.python.org/pypi?:action=list_classifiers
@@ -29,6 +29,12 @@ setup(name='collective.celery',
           'celery',
           'plone.api'
       ],
+      extras_require={
+          'test': [
+              'plone.app.testing',
+              'SQLAlchemy'
+          ]
+      },
       entry_points="""
       [z3c.autoinclude.plugin]
       target = plone
