@@ -8,8 +8,8 @@ from zope.component.hooks import setSite
 from zope.event import notify
 from ZODB.POSException import ConflictError
 
-from base_task import AfterCommitTask
-from utils import _deserialize_arg
+from .base_task import AfterCommitTask
+from .utils import _deserialize_arg
 
 
 class FunctionRunner(object):
