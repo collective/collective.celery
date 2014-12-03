@@ -23,23 +23,6 @@ class BaseTestCase(unittest.TestCase):
         self.app = self.layer['app']
         self.portal = self.layer['portal']
 
-    def login(self, username):
-        """
-        helper method to login as specific user
-
-        :param username: the username of the user to add to the group
-        :type username: str
-        :rtype: None
-
-        """
-        login(self.portal, username)
-
-    def logout(self):
-        """
-        helper method to avoid importing the p.a.testing logout method
-        """
-        logout()
-
     def login_as_portal_owner(self):
         """
         helper method to login as site admin
