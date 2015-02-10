@@ -1,0 +1,17 @@
+language: python
+python: 2.7
+sudo: false
+cache:
+  directories:
+    - eggs
+env:
+  - PLONE_VERSION=4.3
+matrix:
+  fast_finish: true
+install:
+  - python bootstrap.py
+  - bin/buildout annotate
+  - bin/buildout -Nq
+script: bin/test
+notifications:
+  irc: irc.freenode.org#plone-testing
