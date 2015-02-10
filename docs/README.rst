@@ -1,3 +1,11 @@
+.. image:: https://secure.travis-ci.org/collective/collective.celery.png?branch=master
+    :target: http://travis-ci.org/collective/collective.celery
+    :alt: Travis CI badge
+
+.. image:: https://pypip.in/d/collective.celery/badge.png
+    :target: https://pypi.python.org/pypi/collective.celery/
+    :alt: Downloads
+
 Introduction
 ============
 
