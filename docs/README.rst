@@ -155,13 +155,3 @@ And then, in your ``testing.py``::
 
   ...
 
-
-Further documentation
-=====================
-
-.. toctree::
-   :maxdepth: 2
-
-   execution-model
-   using-task-class
-   tips-and-tricks

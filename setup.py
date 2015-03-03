@@ -5,7 +5,7 @@ version = '1.0a1'
 
 setup(name='collective.celery',
       version=version,
-      description="",
+      description="Celery for Plone",
       long_description="%s\n%s" % (
           open("README.rst").read(),
           open(os.path.join("docs", "CHANGES.rst")).read()

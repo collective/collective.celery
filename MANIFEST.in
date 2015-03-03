@@ -1,0 +1,4 @@
+include *.rst LICENSE.GPL LICENSE.txt
+recursive-include collective *
+recursive-include docs *
+global-exclude *.pyc
