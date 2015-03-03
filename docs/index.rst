@@ -6,6 +6,9 @@ Complete API and advanced usage
 .. toctree::
     :maxdepth: 2
 
+    execution-model.rst
+    using-task-class.rst
+    tips-and-tricks.rst
     api/collective.celery.rst
 
 Changelog
