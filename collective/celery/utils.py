@@ -110,7 +110,6 @@ def _serialize_arg(val):
 
 
 def _deserialize_arg(app, val):
-    logger.info(val)
     if isinstance(val, basestring):
         if val.startswith(_object_marker):
             val = val[len(_object_marker):]
