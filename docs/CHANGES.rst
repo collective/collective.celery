@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.0a4 (2015-03-11)
+------------------
+
+- Add countdown argument to apply_async, so tasks can be executed at a later time.
+
+
 1.0a4 (2015-03-04)
 ------------------
 
