@@ -34,7 +34,7 @@ class AfterCommitTask(Task):
     # Override apply_async to register an after-commit hook
     # instead of queueing the task right away and to
     # set object paths instead of objects
-    def apply_async(self, args, kwargs):
+    def apply_async(self, args, kwargs, countdown=None):
         args, kw = self.serialize_args(args, kwargs)
         kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
         kw['authorized_userid'] = api.user.get_current().getId()
@@ -71,7 +71,8 @@ class AfterCommitTask(Task):
                 effective_result = super(AfterCommitTask, self).apply_async(
                     args=args,
                     kwargs=kw,
-                    task_id=task_id
+                    task_id=task_id,
+                    countdown=countdown
                 )
                 if celery.conf.CELERY_ALWAYS_EAGER:
                     result_._state = effective_result._state
