@@ -11,6 +11,11 @@ from ZODB.POSException import ConflictError
 from .base_task import AfterCommitTask
 from .utils import _deserialize_arg
 
+import logging
+import traceback
+
+logger = logging.getLogger('collective.celery')
+
 
 class FunctionRunner(object):
 
@@ -57,6 +62,7 @@ class FunctionRunner(object):
                 transaction.abort()
                 raise self.new_func.retry(exc=e)
             except:
+                logger.warn('Error running task: %s' % traceback.format_exc())
                 transaction.abort()
                 raise
         finally:
