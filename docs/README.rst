@@ -46,7 +46,6 @@ All variables defined there are passed on to celery configuration::
         CELERY_RESULT_BACKEND db+sqlite:///${buildout:directory}/celeryresults.sqlite?timeout=30
         ...
 
-
 Creating tasks
 ==============
 
@@ -95,6 +94,11 @@ The package simply provides a wrapper around the default task runner script whic
 
 .. note::
    In order for the worker to start correctly, you should have a ZEO server setup. Else the worker will fail stating it cannot obtain a lock on the database.
+
+.. note::
+   You can change the log verbosity::
+
+    $ bin/pcelery worker parts/instance/etc/zope.conf --loglevel=DEBUG
 
 .. _developing-and-testing:
 
@@ -146,4 +150,3 @@ And then, in your ``testing.py``::
       defaultBases = (PLONE_FIXTURE, CELERY, ...)
 
   ...
-
