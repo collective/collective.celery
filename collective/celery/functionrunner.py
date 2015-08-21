@@ -37,7 +37,8 @@ class FunctionRunner(object):
         for arg in self.orig_args:
             args.append(_deserialize_arg(self.app, arg))
         for key, value in self.orig_kw.items():
-            kw[key] = _deserialize_arg(self.app, value)
+            if key not in ('authorized_userid', 'site_path'):
+                kw[key] = _deserialize_arg(self.app, value)
 
         return args, kw
 
@@ -49,8 +50,10 @@ class FunctionRunner(object):
         transaction.begin()
         try:
             try:
-                self.userid = self.orig_kw.pop('authorized_userid')
-                self.site = self.app.unrestrictedTraverse(self.orig_kw.pop('site_path'))  # noqa
+                self.userid = self.orig_kw.get('authorized_userid')
+                site_path = str(self.orig_kw.get('site_path',
+                                                 '')).strip().strip('/')
+                self.site = self.app.unrestrictedTraverse(site_path)  # noqa
                 self.authorize()
                 args, kw = self.deserialize_args()  # noqa
                 # run the task

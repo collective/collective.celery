@@ -36,8 +36,19 @@ class AfterCommitTask(Task):
     # set object paths instead of objects
     def apply_async(self, args, kwargs, **options):
         args, kw = self.serialize_args(args, kwargs)
-        kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
-        kw['authorized_userid'] = api.user.get_current().getId()
+        if 'site_path' not in kw:
+            try:
+                kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
+            except api.exc.CannotGetPortalError:
+                pass
+        if 'authorized_userid' not in kw:
+            try:
+                user = api.user.get_current()
+                if user is not None:
+                    kw['authorized_userid'] = user.getId()
+            except api.exc.UserNotFoundError:
+                pass
+
         celery = getCelery()
         # Here we cheat a little: since we will not start the task
         # up until the transaction is done,
@@ -88,3 +99,21 @@ class AfterCommitTask(Task):
         transaction.get().addAfterCommitHook(hook)
         # Return the "fake" result ID
         return result_
+
+    def subtask(self, args=None, *starargs, **starkwargs):
+        starargs, starkwargs = self.serialize_args(starargs, starkwargs)
+        if 'site_path' not in starkwargs:
+            try:
+                starkwargs['site_path'] = '/'.join(
+                    api.portal.get().getPhysicalPath()
+                )
+            except api.exc.CannotGetPortalError:
+                pass
+        if 'authorized_userid' not in starkwargs:
+            try:
+                user = api.user.get_current()
+                starkwargs['authorized_userid'] = user.getId()
+            except api.exc.UserNotFoundError:
+                pass
+        return super(AfterCommitTask, self).subtask(args, *starargs,
+                                                    **starkwargs)
