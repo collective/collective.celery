@@ -39,14 +39,14 @@ class AfterCommitTask(Task):
         if 'site_path' not in kw:
             try:
                 kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
-            except api.exc.CannotGetPortalError:
+            except api.exc.PloneApiError:
                 pass
         if 'authorized_userid' not in kw:
             try:
                 user = api.user.get_current()
                 if user is not None:
                     kw['authorized_userid'] = user.getId()
-            except api.exc.UserNotFoundError:
+            except api.exc.PloneApiError:
                 pass
 
         celery = getCelery()
