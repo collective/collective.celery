@@ -51,7 +51,14 @@ class TestFunctionRunner(BaseFunctionRunnerTestCase):
         self.frunner()
         result = self.frunner.deserialize_args()
         self.assertEqual(result[0], self.args)
-        self.assertEqual(result[1], self.kwargs)
+
+        # deserialize returns kwargs minus internal args `site_path` and
+        # `authorized_userid`
+        restricted_kwargs = self.kwargs.copy()
+        del restricted_kwargs['site_path']
+        del restricted_kwargs['authorized_userid']
+
+        self.assertEqual(result[1], restricted_kwargs)
 
     def test_authorize(self):
         self.assertIsNone(self.frunner.authorize())
