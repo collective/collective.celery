@@ -1,18 +1,18 @@
+import logging
+import traceback
+
+from .base_task import AfterCommitTask
+from .utils import _deserialize_arg
 from AccessControl.SecurityManagement import newSecurityManager
 from AccessControl.SecurityManagement import noSecurityManager
-from collective.celery.utils import getApp
 from Testing.makerequest import makerequest
+from ZODB.POSException import ConflictError
+from celery.exceptions import Retry
+from collective.celery.utils import getApp
 import transaction
 from zope.app.publication.interfaces import BeforeTraverseEvent
 from zope.component.hooks import setSite
 from zope.event import notify
-from ZODB.POSException import ConflictError
-
-from .base_task import AfterCommitTask
-from .utils import _deserialize_arg
-
-import logging
-import traceback
 
 logger = logging.getLogger('collective.celery')
 
@@ -60,7 +60,7 @@ class FunctionRunner(object):
             except ConflictError, e:
                 # On ZODB conflicts, retry using celery's mechanism
                 transaction.abort()
-                raise self.new_func.retry(exc=e)
+                raise Retry(exc=e)
             except:
                 logger.warn('Error running task: %s' % traceback.format_exc())
                 transaction.abort()

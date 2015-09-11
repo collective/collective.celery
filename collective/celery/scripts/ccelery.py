@@ -1,10 +1,12 @@
 # a lot of this pulled out of pyramid_celery
-from collective.celery.utils import getCelery
-import sys
+import logging
 import os
+import sys
+
 from App.config import getConfiguration
 from celery.bin.celery import CeleryCommand
-import logging
+from collective.celery.utils import getCelery
+from pkg_resources import iter_entry_points
 
 logger = logging.getLogger('collective.celery')
 
@@ -36,6 +38,10 @@ def main(argv=sys.argv):
     # (see multiprocessing.forking.get_preparation_data())
     if __name__ != "__main__":
         sys.modules["__main__"] = sys.modules[__name__]
+
+    # load tasks up
+    tasks = dict([(i.name, i.load()) for i in iter_entry_points(
+                  group='celery_tasks', name=None)])
 
     tasks = getConfiguration().environment.get('CELERY_TASKS')
     if tasks:

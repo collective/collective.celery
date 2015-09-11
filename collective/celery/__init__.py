@@ -2,10 +2,13 @@
 # This is all pulled out of David Glick's gist on github
 # https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py
 import logging
-from collective.celery.utils import getCelery
 
-from functionrunner import AdminFunctionRunner, AuthorizedFunctionRunner
 from base_task import AfterCommitTask
+from celery import current_app
+from celery.signals import after_task_publish
+from collective.celery.utils import getCelery
+from functionrunner import AdminFunctionRunner, AuthorizedFunctionRunner
+
 
 logger = logging.getLogger('collective.celery')
 
@@ -62,3 +65,11 @@ or through the additional ``as_admin()`` method::
 
 Which will execute the task in an unrestricted environment.
 """
+
+
+@after_task_publish.connect
+def update_sent_state(sender=None, body=None, **kwargs):
+    """so we can know if a task was scheduled"""
+    task = current_app.tasks.get(sender)
+    backend = task.backend if task else current_app.backend
+    backend.store_result(body['id'], None, "SENT")
