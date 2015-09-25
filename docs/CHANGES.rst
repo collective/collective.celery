@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0b1 (unreleased)
+------------------
+
+- be able to specify entry points for module tasks
+  [vangheem]
+
+
 1.0a5 (2015-03-11)
 ------------------
 

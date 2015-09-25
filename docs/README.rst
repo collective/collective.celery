@@ -85,6 +85,21 @@ Check out :ref:`calliung tasks <celery:calling-guide>` in the celery documentati
    You do not need to specify a context object if you don't use it for anything meaningful in the task: the system will already set up the correct site and if you just need that you can obtain it easily (maybe via ``plone.api``).
 
 
+Registering Tasks
+=================
+
+If you don't want to need to set the ``CELERY_IMPORTS`` environment value,
+you can use package entry points to load tasks.
+
+Example setup.py::
+
+    entry_points="""
+      # -*- Entry points: -*-
+      [celery_tasks]
+      mypackage = mypackage.tasks
+      """
+
+
 Starting the task runner
 ========================
 
