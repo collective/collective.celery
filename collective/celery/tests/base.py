@@ -1,8 +1,9 @@
-import unittest2 as unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 from plone.testing import z2
 from plone.app.testing.interfaces import SITE_OWNER_NAME
-from plone.app.testing import login
-from plone.app.testing import logout
 
 from collective.celery import getCelery
 from collective.celery.testing import COLLECTIVE_CELERY_INTEGRATION_TESTING
