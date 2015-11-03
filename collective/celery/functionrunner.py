@@ -9,6 +9,7 @@ from Testing.makerequest import makerequest
 from ZODB.POSException import ConflictError
 from celery.exceptions import Retry
 from collective.celery.utils import getApp
+from plone import api
 import transaction
 from zope.app.publication.interfaces import BeforeTraverseEvent
 from zope.component.hooks import setSite
@@ -83,7 +84,7 @@ class AuthorizedFunctionRunner(FunctionRunner):
         # TODO: using plone.api.get_user().getUser()
         # somehow makes the test fail, probably because the whole setRoles
         # and login() don't do everything.
-        user = self.site['acl_users'].getUserById(self.userid)
+        user = api.user.get(self.userid).getUser()
         newSecurityManager(None, user)
 
 
@@ -95,6 +96,6 @@ class AdminFunctionRunner(AuthorizedFunctionRunner):
 
         # set up admin user
         # XXX need to search for an admin like user otherwise?
-        user = self.site['acl_users'].getUserById('admin')
+        user = api.user.get('admin').getUser()
         if user:
             newSecurityManager(None, user)
