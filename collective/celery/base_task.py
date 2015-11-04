@@ -38,6 +38,9 @@ class AfterCommitTask(Task):
         args, kw = self.serialize_args(args, kwargs)
         kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
         kw['authorized_userid'] = api.user.get_current().getId()
+
+        without_transaction = options.pop('without_transaction', False)
+
         celery = getCelery()
         # Here we cheat a little: since we will not start the task
         # up until the transaction is done,
@@ -68,23 +71,31 @@ class AfterCommitTask(Task):
         #   (even if, in and by itself, worked)
         def hook(success):
             if success:
-                effective_result = super(AfterCommitTask, self).apply_async(
-                    args=args,
-                    kwargs=kw,
-                    task_id=task_id,
-                    **options
-                )
-                if celery.conf.CELERY_ALWAYS_EAGER:
-                    result_._state = effective_result._state
-                    result_._result = effective_result._result
-                    result_._traceback = effective_result._traceback
-                    celery.backend.store_result(
-                        task_id,
-                        effective_result._result,
-                        effective_result._state,
-                        traceback=result_.traceback,
-                        request=self.request
-                    )
-        transaction.get().addAfterCommitHook(hook)
-        # Return the "fake" result ID
-        return result_
+                self._apply_async(args, kw, result_, celery, task_id, options)
+        if without_transaction:
+            return self._apply_async(args, kw, result_, celery, task_id, options)
+        else:
+            transaction.get().addAfterCommitHook(hook)
+            # Return the "fake" result ID
+            return result_
+
+    def _apply_async(self, args, kw, result_, celery, task_id, options):
+        effective_result = super(AfterCommitTask, self).apply_async(
+            args=args,
+            kwargs=kw,
+            task_id=task_id,
+            **options
+        )
+        if celery.conf.CELERY_ALWAYS_EAGER:
+            result_._state = effective_result._state
+            result_._result = effective_result._result
+            result_._traceback = effective_result._traceback
+            celery.backend.store_result(
+                task_id,
+                effective_result._result,
+                effective_result._state,
+                traceback=result_.traceback,
+                request=self.request
+            )
+            return result_
+        return effective_result

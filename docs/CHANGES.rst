@@ -4,6 +4,9 @@ Changelog
 1.0b1 (unreleased)
 ------------------
 
+- be able to schedule task outside of transaction management
+  [vangheem]
+
 - be able to specify entry points for module tasks
   [vangheem]
 
