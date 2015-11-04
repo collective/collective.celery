@@ -14,6 +14,8 @@ import transaction
 from zope.app.publication.interfaces import BeforeTraverseEvent
 from zope.component.hooks import setSite
 from zope.event import notify
+from zope.globalrequest import setRequest
+from zope.globalrequest import clearRequest
 
 logger = logging.getLogger('collective.celery')
 
@@ -47,6 +49,7 @@ class FunctionRunner(object):
 
     def __call__(self):
         self.app = makerequest(getApp())
+        setRequest(self.app.REQUEST)
         transaction.begin()
         try:
             try:
@@ -70,6 +73,7 @@ class FunctionRunner(object):
             noSecurityManager()
             setSite(None)
             self.app._p_jar.close()
+            clearRequest()
 
         return result
 
