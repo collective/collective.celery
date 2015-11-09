@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0.0 (2015-11-09)
+1.0b1 (unreleased)
 ------------------
 
 - be able to schedule task outside of transaction management
