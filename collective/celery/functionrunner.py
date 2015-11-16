@@ -88,7 +88,7 @@ class AuthorizedFunctionRunner(FunctionRunner):
         # TODO: using plone.api.get_user().getUser()
         # somehow makes the test fail, probably because the whole setRoles
         # and login() don't do everything.
-        user = api.user.get(self.userid).getUser()
+        user = api.user.get(userid=self.userid).getUser()
         newSecurityManager(None, user)
 
 
@@ -100,6 +100,6 @@ class AdminFunctionRunner(AuthorizedFunctionRunner):
 
         # set up admin user
         # XXX need to search for an admin like user otherwise?
-        user = api.user.get('admin').getUser()
+        user = api.user.get(userid='admin').getUser()
         if user:
             newSecurityManager(None, user)
