@@ -1,8 +1,10 @@
 Changelog
 =========
 
-1.0b1 (unreleased)
+1.0b1 (2015-12-09)
 ------------------
+
+New:
 
 - be able to schedule task outside of transaction management
   [vangheem]
