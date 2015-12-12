@@ -29,7 +29,7 @@ In the first, you get an :py:class:`~celery.result.EagerResult` back, and theref
   import unittest
   import transaction
   from collective.celery import task
-  # Make sure has collective.celery.testing.CELERY as base
+  # Make sure has collective.celery.testing.COLLECTIVE_CELERY_FIXTURE as base
   from ..testing import MY_LAYER
 
 
@@ -47,7 +47,7 @@ In the first, you get an :py:class:`~celery.result.EagerResult` back, and theref
           transaction.commit() # Up until here, it is not executed
           self.assertEqual(result, 6)
 
-In more complex cases, like a robot test, where you might have a browserview that polls the result backend, everything should work smoothly as long as you have :py:data:`collective.celery.testing.CELERY` within your layer's bases.
+In more complex cases, like a robot test, where you might have a browserview that polls the result backend, everything should work smoothly as long as you have :py:data:`collective.celery.testing.COLLECTIVE_CELERY_FIXTURE` within your layer's bases.
 
 
 .. [#]: Citation needed
