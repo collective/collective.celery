@@ -14,6 +14,11 @@ setup(name='collective.celery',
       # http://pypi.python.org/pypi?:action=list_classifiers
       classifiers=[
           "Programming Language :: Python",
+          "Framework :: Plone :: 4.0",
+          "Framework :: Plone :: 4.1",
+          "Framework :: Plone :: 4.2",
+          "Framework :: Plone :: 4.3",
+          "Framework :: Plone :: 5.0",
       ],
       keywords='celery async plone',
       author='Nathan Van Gheem',
