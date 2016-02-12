@@ -1,21 +1,23 @@
-import logging
-import traceback
-
-from .base_task import AfterCommitTask
-from .utils import _deserialize_arg
 from AccessControl.SecurityManagement import newSecurityManager
 from AccessControl.SecurityManagement import noSecurityManager
+from celery.exceptions import Retry
+from collective.celery.base_task import AfterCommitTask
+from collective.celery.utils import _deserialize_arg
+from collective.celery.utils import getApp
+from collective.celery.utils import getCelery
+from plone import api
 from Testing.makerequest import makerequest
 from ZODB.POSException import ConflictError
-from celery.exceptions import Retry
-from collective.celery.utils import getApp
-from plone import api
-import transaction
 from zope.app.publication.interfaces import BeforeTraverseEvent
 from zope.component.hooks import setSite
 from zope.event import notify
-from zope.globalrequest import setRequest
 from zope.globalrequest import clearRequest
+from zope.globalrequest import setRequest
+
+import logging
+import traceback
+import transaction
+
 
 logger = logging.getLogger('collective.celery')
 
@@ -23,6 +25,7 @@ logger = logging.getLogger('collective.celery')
 class FunctionRunner(object):
 
     base_task = AfterCommitTask
+    app = None
 
     def __init__(self, func, new_func, orig_args, orig_kw, task_kw):
         self.orig_args = orig_args
@@ -47,20 +50,34 @@ class FunctionRunner(object):
     def authorize(self):
         pass
 
+    def _run(self):
+        self.userid = self.orig_kw.pop('authorized_userid')
+        site_path = self.orig_kw.pop('site_path')
+        if self.app is None:
+            self.site = api.portal.get()
+        else:
+            self.site = self.app.unrestrictedTraverse(site_path)
+        self.authorize()
+        args, kw = self.deserialize_args()  # noqa
+        # run the task
+        return self.func(*args, **kw)
+
     def __call__(self):
+        celery = getCelery()
+        if celery.conf.CELERY_ALWAYS_EAGER:
+            # dive out of setup, this is not run in a celery task runner
+            return self._run()
+
         self.app = makerequest(getApp())
         setRequest(self.app.REQUEST)
+
         transaction.begin()
         try:
             try:
-                self.userid = self.orig_kw.pop('authorized_userid')
-                self.site = self.app.unrestrictedTraverse(self.orig_kw.pop('site_path'))  # noqa
-                self.authorize()
-                args, kw = self.deserialize_args()  # noqa
-                # run the task
-                result = self.func(*args, **kw)
+                result = self._run()
                 # commit transaction
                 transaction.commit()
+                return result
             except ConflictError, e:
                 # On ZODB conflicts, retry using celery's mechanism
                 transaction.abort()
@@ -74,8 +91,6 @@ class FunctionRunner(object):
             setSite(None)
             self.app._p_jar.close()
             clearRequest()
-
-        return result
 
 
 class AuthorizedFunctionRunner(FunctionRunner):

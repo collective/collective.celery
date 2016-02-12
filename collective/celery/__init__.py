@@ -1,13 +1,14 @@
 # -*- encoding: utf-8 -*-
 # This is all pulled out of David Glick's gist on github
 # https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py
-import logging
-
 from base_task import AfterCommitTask
 from celery import current_app
 from celery.signals import after_task_publish
+from collective.celery.functionrunner import AdminFunctionRunner
+from collective.celery.functionrunner import AuthorizedFunctionRunner
 from collective.celery.utils import getCelery
-from functionrunner import AdminFunctionRunner, AuthorizedFunctionRunner
+
+import logging
 
 
 logger = logging.getLogger('collective.celery')

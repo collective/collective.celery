@@ -1,18 +1,20 @@
-import os
-import logging
-import sys
+from App.config import getConfiguration
+from celery import current_app as celery
 from celery.app import defaults
+from OFS.interfaces import IItem
+
+import logging
+import os
+import sys
+import threading
+import Zope2
+
+
 try:
     from celery import registry
 except ImportError:
     # Celery >= 3.1
     from celery import current_app as registry
-
-from App.config import getConfiguration
-from celery import current_app as celery
-import threading
-import Zope2
-from OFS.interfaces import IItem
 
 
 _local = threading.local()

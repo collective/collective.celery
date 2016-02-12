@@ -1,12 +1,12 @@
 from celery import result
 from celery import states
 from celery import Task
+from collective.celery.utils import _serialize_arg
 from collective.celery.utils import getCelery
 from kombu.utils import uuid
 from plone import api
-import transaction
 
-from utils import _serialize_arg
+import transaction
 
 
 class EagerResult(result.EagerResult):
@@ -72,7 +72,7 @@ class AfterCommitTask(Task):
         def hook(success):
             if success:
                 self._apply_async(args, kw, result_, celery, task_id, options)
-        if without_transaction:
+        if without_transaction or celery.conf.CELERY_ALWAYS_EAGER:
             return self._apply_async(args, kw, result_, celery, task_id, options)
         else:
             transaction.get().addAfterCommitHook(hook)

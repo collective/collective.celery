@@ -10,7 +10,9 @@ New:
 
 Fixes:
 
-- nothing yet
+- Fix use of CELERY_ALWAYS_EAGER so this package can be include in tests without
+  too many gymnastics
+  [vangheem]
 
 1.0 (2015-12-09)
 ----------------
