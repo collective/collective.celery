@@ -91,7 +91,15 @@ def getCelery():
     return _local.celery
 
 
+def setApp(app):
+    _local.app = app
+
+
 def getApp(*args, **kwargs):
+    try:
+        return _local.app
+    except AttributeError:
+        pass
     if Zope2.bobo_application is None:
         orig_argv = sys.argv
         sys.argv = ['']

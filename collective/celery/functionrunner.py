@@ -66,6 +66,7 @@ class FunctionRunner(object):
         celery = getCelery()
         if celery.conf.CELERY_ALWAYS_EAGER:
             # dive out of setup, this is not run in a celery task runner
+            self.app = getApp()
             return self._run()
 
         self.app = makerequest(getApp())

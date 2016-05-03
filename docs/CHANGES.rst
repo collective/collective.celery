@@ -1,6 +1,18 @@
 Changelog
 =========
 
+1.0.2 (unreleased)
+------------------
+
+New:
+
+- nothing yet
+
+Fixes:
+
+- More test fixes. Provide setApp method to use in test setup
+  [vangheem]
+
 1.0.1 (2016-02-12)
 ------------------
 

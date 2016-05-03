@@ -8,6 +8,7 @@ from plone.app.testing.interfaces import SITE_OWNER_NAME
 from collective.celery import getCelery
 from collective.celery.testing import COLLECTIVE_CELERY_INTEGRATION_TESTING
 from collective.celery.utils import _getCelery
+from collective.celery.utils import setApp
 
 
 class BaseTestCase(unittest.TestCase):
@@ -23,6 +24,8 @@ class BaseTestCase(unittest.TestCase):
         _getCelery()
         self.app = self.layer['app']
         self.portal = self.layer['portal']
+
+        setApp(self.app)
 
     def login_as_portal_owner(self):
         """
