@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.0.3 (2016-06-03)
+------------------
+
+Fixes:
+
+- If eager mode used, do not switch users
+  [vangheem]
+
+
 1.0.2 (2016-05-03)
 ------------------
 

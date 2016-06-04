@@ -26,6 +26,7 @@ class FunctionRunner(object):
 
     base_task = AfterCommitTask
     app = None
+    eager = False
 
     def __init__(self, func, new_func, orig_args, orig_kw, task_kw):
         self.orig_args = orig_args
@@ -65,6 +66,7 @@ class FunctionRunner(object):
     def __call__(self):
         celery = getCelery()
         if celery.conf.CELERY_ALWAYS_EAGER:
+            self.eager = True
             # dive out of setup, this is not run in a celery task runner
             self.app = getApp()
             return self._run()
@@ -97,6 +99,10 @@ class FunctionRunner(object):
 class AuthorizedFunctionRunner(FunctionRunner):
 
     def authorize(self):
+        if self.eager:
+            # ignore, run as current user
+            return
+
         notify(BeforeTraverseEvent(self.site, self.site.REQUEST))
         setSite(self.site)
 
@@ -111,6 +117,10 @@ class AuthorizedFunctionRunner(FunctionRunner):
 class AdminFunctionRunner(AuthorizedFunctionRunner):
 
     def authorize(self):
+        if self.eager:
+            # ignore, run as current user
+            return
+
         notify(BeforeTraverseEvent(self.site, self.site.REQUEST))
         setSite(self.site)
 
