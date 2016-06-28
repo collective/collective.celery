@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.0.4 (2016-06-27)
+------------------
+
+Fixes:
+
+- be able to use compound celery commands
+  [vangheem]
+
 1.0.3 (2016-06-03)
 ------------------
 
