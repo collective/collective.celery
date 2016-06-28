@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.0.5 (2016-06-27)
+------------------
+
+Fixes:
+
+- detect location of zope conf
+  [vangheem]
+
+
 1.0.4 (2016-06-27)
 ------------------
 

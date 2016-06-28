@@ -27,7 +27,14 @@ def main(argv=sys.argv):
     if len(sys.argv) < 3:
         raise Exception("must specify a zope config file and a celery command")
     argv = argv
-    filepath = sys.argv[-1]
+
+    # find the index of the conf file in the args
+    conf_index = 2
+    for idx, arg in enumerate(sys.argv):
+        if '.conf' in arg:
+            conf_index = idx
+            break
+    filepath = sys.argv[conf_index]
     os.environ['ZOPE_CONFIG'] = filepath
     sys.argv = ['']
     from Zope2.Startup.run import configure
@@ -49,7 +56,7 @@ def main(argv=sys.argv):
             __import__(tasks)
         except ImportError:
             logger.warn('error importing tasks: ' + tasks)
-    argv.remove(argv[-1])
+    argv.remove(filepath)
     # restore argv
     sys.argv = argv
     Worker(app=getCelery()).execute_from_commandline()
