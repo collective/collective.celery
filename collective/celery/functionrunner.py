@@ -72,6 +72,7 @@ class FunctionRunner(object):
             return self._run()
 
         self.app = makerequest(getApp())
+        self.app.REQUEST['PARENTS'] = [self.app]
         setRequest(self.app.REQUEST)
 
         transaction.begin()

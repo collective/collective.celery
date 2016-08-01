@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.0.6 (2016-08-01)
+------------------
+
+Fixes:
+
+- provide PARENTS value on the request object
+  [vangheem]
+
 1.0.5 (2016-06-27)
 ------------------
 
