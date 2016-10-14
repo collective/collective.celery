@@ -57,7 +57,12 @@ class AfterCommitTask(Task):
         # But we can actually pass the task a specific task_id
         # (although it's not very documented)
         # and an AsyncResult at this point is just that id, basically.
-        task_id = uuid()
+        if 'task_id' in options:
+            task_id = options['task_id']
+            del options['task_id']
+        else:
+            task_id = uuid()
+
 
         # Construct a fake result
         if celery.conf.CELERY_ALWAYS_EAGER:

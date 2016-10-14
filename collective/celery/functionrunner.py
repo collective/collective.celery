@@ -47,6 +47,8 @@ class FunctionRunner(object):
 
     def __call__(self):
         self.app = makerequest(getApp())
+        self.app._p_jar.sync()
+
         transaction.begin()
         try:
             try:
