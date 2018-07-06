@@ -72,5 +72,4 @@ Which will execute the task in an unrestricted environment.
 def update_sent_state(sender=None, body=None, **kwargs):
     """so we can know if a task was scheduled"""
     task = current_app.tasks.get(sender)
-    backend = task.backend if task else current_app.backend
-    backend.store_result(body['id'], None, "SENT")
+    task.update_state(task_id=kwargs['headers']['id'], state="SENT")

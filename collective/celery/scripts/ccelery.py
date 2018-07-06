@@ -1,4 +1,5 @@
 # a lot of this pulled out of pyramid_celery
+from importlib import import_module
 import logging
 import os
 import sys
@@ -38,7 +39,7 @@ def main(argv=sys.argv):
     os.environ['ZOPE_CONFIG'] = filepath
     sys.argv = ['']
     from Zope2.Startup.run import configure
-    configure(os.environ['ZOPE_CONFIG'])
+    startup = configure(os.environ['ZOPE_CONFIG'])
 
     # Fix for setuptools generated scripts, so that it will
     # work with multiprocessing fork emulation.
@@ -53,7 +54,12 @@ def main(argv=sys.argv):
     tasks = getConfiguration().environment.get('CELERY_TASKS')
     if tasks:
         try:
-            __import__(tasks)
+            logger.warn('importing tasks: ' + tasks)
+            module = import_module(tasks)
+            extra_config = getattr(module, 'extra_config', None)
+            if extra_config is not None:
+                logger.warn('Found additional Zope config.')
+                extra_config(startup)
         except ImportError:
             logger.warn('error importing tasks: ' + tasks)
     argv.remove(filepath)

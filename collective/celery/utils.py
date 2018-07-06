@@ -39,11 +39,13 @@ _types = {
     'list': (list, eval),
     'tuple': (tuple, eval),
     'string': (str, str),
+    'str': (str, str),
 }
 
 _options = dict(
     (key, _types[opt.type])
     for key, opt in defaults.flatten(defaults.NAMESPACES)
+    if opt.type in _types
 )
 
 _object_marker = 'object://'
