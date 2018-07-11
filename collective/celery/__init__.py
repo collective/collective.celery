@@ -12,6 +12,7 @@ import logging
 
 
 logger = logging.getLogger('collective.celery')
+TESTING = False
 
 
 def initialize(context):

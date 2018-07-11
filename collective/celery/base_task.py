@@ -5,6 +5,8 @@ from collective.celery.utils import _serialize_arg
 from collective.celery.utils import getCelery
 from kombu.utils import uuid
 from plone import api
+from transaction.interfaces import ISynchronizer
+from zope.interface import implementer
 
 import transaction
 
@@ -13,6 +15,54 @@ class EagerResult(result.EagerResult):
 
     def ready(self):
         return self._state in states.READY_STATES
+
+
+@implementer(ISynchronizer)
+class CelerySynchronizer(object):
+    """Handles communication with celery at transaction boundaries.
+    We previously used after-commit hooks, but the transaction package
+    swallows exceptions in commit hooks.
+    """
+
+    def beforeCompletion(self, txn):
+        pass
+
+    def afterCompletion(self, txn):
+        """Called after commit or abort
+        """
+        # Skip if running tests
+        import collective.celery
+        if collective.celery.TESTING:
+            return False
+        if txn.status == transaction._transaction.Status.COMMITTED:
+            tasks = getattr(txn, '_celery_tasks', [])
+            executed = []
+            for args, kw, task, task_id, options in tasks:
+                if (args, kw, options) in executed:
+                    # make sure task was not sent multiple times
+                    # by ignoring tasks with exact same args.
+                    continue
+                executed.append((args, kw, options))
+                super(AfterCommitTask, task).apply_async(
+                    args=args,
+                    kwargs=kw,
+                    task_id=task_id,
+                    **options
+                )
+
+    def newTransaction(self, txn):
+        pass
+
+celery_synch = CelerySynchronizer()
+
+
+def queue_task_after_commit(args, kw, task, task_id, options):
+    transaction.manager.registerSynch(celery_synch)
+
+    txn = transaction.get()
+    if not hasattr(txn, '_celery_tasks'):
+        txn._celery_tasks = []
+    txn._celery_tasks.append((args, kw, task, task_id, options))
 
 
 class AfterCommitTask(Task):
@@ -69,13 +119,10 @@ class AfterCommitTask(Task):
         #   and the async task updates it, if we roll back everything
         #   then also the original content construction goes away
         #   (even if, in and by itself, worked)
-        def hook(success):
-            if success:
-                self._apply_async(args, kw, result_, celery, task_id, options)
         if without_transaction or celery.conf.CELERY_ALWAYS_EAGER:
             return self._apply_async(args, kw, result_, celery, task_id, options)
         else:
-            transaction.get().addAfterCommitHook(hook)
+            queue_task_after_commit(args, kw, self, task_id, options)
             # Return the "fake" result ID
             return result_
 
