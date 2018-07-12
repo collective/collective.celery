@@ -1,15 +1,16 @@
 # a lot of this pulled out of pyramid_celery
 from importlib import import_module
-import logging
 import os
 import sys
 
 from App.config import getConfiguration
 from celery.bin.celery import CeleryCommand
+from celery.utils.log import get_task_logger
 from collective.celery.utils import getCelery
 from pkg_resources import iter_entry_points
 
-logger = logging.getLogger('collective.celery')
+
+logger = get_task_logger(__name__)
 
 
 class CommandMixin(object):

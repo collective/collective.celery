@@ -8,10 +8,7 @@ from collective.celery.functionrunner import AdminFunctionRunner
 from collective.celery.functionrunner import AuthorizedFunctionRunner
 from collective.celery.utils import getCelery
 
-import logging
 
-
-logger = logging.getLogger('collective.celery')
 TESTING = False
 
 

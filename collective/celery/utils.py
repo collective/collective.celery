@@ -3,7 +3,6 @@ from celery import current_app as celery
 from celery.app import defaults
 from OFS.interfaces import IItem
 
-import logging
 import os
 import sys
 import threading
@@ -18,8 +17,6 @@ except ImportError:
 
 
 _local = threading.local()
-
-logger = logging.getLogger('collective.celery')
 
 
 def _bool(term, table={"false": False, "no": False, "0": False,
