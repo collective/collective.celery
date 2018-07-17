@@ -48,21 +48,29 @@ def main(argv=sys.argv):
     if __name__ != "__main__":
         sys.modules["__main__"] = sys.modules[__name__]
 
-    # load tasks up
+    # load entry point tasks up
     tasks = dict([(i.name, i.load()) for i in iter_entry_points(
                   group='celery_tasks', name=None)])
+    for name, task_list in tasks.items():
+        logger.warn('importing tasks: ' + name)
+        extra_config = getattr(task_list, 'extra_config', None)
+        if extra_config is not None:
+            logger.warn('Found additional Zope config.')
+            extra_config(startup)
 
+    # load env tasks up
     tasks = getConfiguration().environment.get('CELERY_TASKS')
     if tasks:
-        try:
-            logger.warn('importing tasks: ' + tasks)
-            module = import_module(tasks)
-            extra_config = getattr(module, 'extra_config', None)
-            if extra_config is not None:
-                logger.warn('Found additional Zope config.')
-                extra_config(startup)
-        except ImportError:
-            logger.warn('error importing tasks: ' + tasks)
+        for task_list in tasks.split():
+            try:
+                logger.warn('importing tasks: ' + tasks)
+                module = import_module(tasks)
+                extra_config = getattr(module, 'extra_config', None)
+                if extra_config is not None:
+                    logger.warn('Found additional Zope config.')
+                    extra_config(startup)
+            except ImportError:
+                logger.warn('error importing tasks: ' + tasks)
     argv.remove(filepath)
     # restore argv
     sys.argv = argv
