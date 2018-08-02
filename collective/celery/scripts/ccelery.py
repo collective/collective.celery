@@ -49,8 +49,14 @@ def main(argv=sys.argv):
         sys.modules["__main__"] = sys.modules[__name__]
 
     # load entry point tasks up
-    tasks = dict([(i.name, i.load()) for i in iter_entry_points(
-                  group='celery_tasks', name=None)])
+    tasks = []
+    for entry_point in iter_entry_points(group='celery_tasks', name=None):
+        try:
+            tasks.append((entry_point.name, entry_point.load()))
+        except ImportError:
+            logger.warn('error importing tasks: ' + entry_point.name)
+            raise
+    tasks = dict(tasks)
     for name, task_list in tasks.items():
         logger.warn('importing tasks: ' + name)
         extra_config = getattr(task_list, 'extra_config', None)
@@ -71,6 +77,7 @@ def main(argv=sys.argv):
                     extra_config(startup)
             except ImportError:
                 logger.warn('error importing tasks: ' + tasks)
+                raise
     argv.remove(filepath)
     # restore argv
     sys.argv = argv
