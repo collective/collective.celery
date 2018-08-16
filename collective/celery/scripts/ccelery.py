@@ -1,14 +1,16 @@
 # a lot of this pulled out of pyramid_celery
-import logging
+from importlib import import_module
 import os
 import sys
 
 from App.config import getConfiguration
 from celery.bin.celery import CeleryCommand
+from celery.utils.log import get_task_logger
 from collective.celery.utils import getCelery
 from pkg_resources import iter_entry_points
 
-logger = logging.getLogger('collective.celery')
+
+logger = get_task_logger(__name__)
 
 
 class CommandMixin(object):
@@ -38,7 +40,7 @@ def main(argv=sys.argv):
     os.environ['ZOPE_CONFIG'] = filepath
     sys.argv = ['']
     from Zope2.Startup.run import configure
-    configure(os.environ['ZOPE_CONFIG'])
+    startup = configure(os.environ['ZOPE_CONFIG'])
 
     # Fix for setuptools generated scripts, so that it will
     # work with multiprocessing fork emulation.
@@ -46,16 +48,36 @@ def main(argv=sys.argv):
     if __name__ != "__main__":
         sys.modules["__main__"] = sys.modules[__name__]
 
-    # load tasks up
-    tasks = dict([(i.name, i.load()) for i in iter_entry_points(
-                  group='celery_tasks', name=None)])
+    # load entry point tasks up
+    tasks = []
+    for entry_point in iter_entry_points(group='celery_tasks', name=None):
+        try:
+            tasks.append((entry_point.name, entry_point.load()))
+        except ImportError:
+            logger.warn('error importing tasks: ' + entry_point.name)
+            raise
+    tasks = dict(tasks)
+    for name, task_list in tasks.items():
+        logger.warn('importing tasks: ' + name)
+        extra_config = getattr(task_list, 'extra_config', None)
+        if extra_config is not None:
+            logger.warn('Found additional Zope config.')
+            extra_config(startup)
 
+    # load env tasks up
     tasks = getConfiguration().environment.get('CELERY_TASKS')
     if tasks:
-        try:
-            __import__(tasks)
-        except ImportError:
-            logger.warn('error importing tasks: ' + tasks)
+        for task_list in tasks.split():
+            try:
+                logger.warn('importing tasks: ' + tasks)
+                module = import_module(tasks)
+                extra_config = getattr(module, 'extra_config', None)
+                if extra_config is not None:
+                    logger.warn('Found additional Zope config.')
+                    extra_config(startup)
+            except ImportError:
+                logger.warn('error importing tasks: ' + tasks)
+                raise
     argv.remove(filepath)
     # restore argv
     sys.argv = argv

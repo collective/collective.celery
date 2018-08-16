@@ -3,7 +3,6 @@ from celery import current_app as celery
 from celery.app import defaults
 from OFS.interfaces import IItem
 
-import logging
 import os
 import sys
 import threading
@@ -18,8 +17,6 @@ except ImportError:
 
 
 _local = threading.local()
-
-logger = logging.getLogger('collective.celery')
 
 
 def _bool(term, table={"false": False, "no": False, "0": False,
@@ -39,11 +36,13 @@ _types = {
     'list': (list, eval),
     'tuple': (tuple, eval),
     'string': (str, str),
+    'str': (str, str),
 }
 
 _options = dict(
     (key, _types[opt.type])
     for key, opt in defaults.flatten(defaults.NAMESPACES)
+    if opt.type in _types
 )
 
 _object_marker = 'object://'

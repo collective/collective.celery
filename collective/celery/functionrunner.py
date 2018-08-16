@@ -1,6 +1,7 @@
 from AccessControl.SecurityManagement import newSecurityManager
 from AccessControl.SecurityManagement import noSecurityManager
 from celery.exceptions import Retry
+from celery.utils.log import get_task_logger
 from collective.celery.base_task import AfterCommitTask
 from collective.celery.utils import _deserialize_arg
 from collective.celery.utils import getApp
@@ -14,12 +15,11 @@ from zope.event import notify
 from zope.globalrequest import clearRequest
 from zope.globalrequest import setRequest
 
-import logging
 import traceback
 import transaction
 
 
-logger = logging.getLogger('collective.celery')
+logger = get_task_logger(__name__)
 
 
 class FunctionRunner(object):
