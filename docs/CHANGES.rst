@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.1.0 (unreleased)
+------------------
+
+- fixes to work with latest celery
+  [runyaga]
+
+
 1.0.6 (2016-08-01)
 ------------------
 
