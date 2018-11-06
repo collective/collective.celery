@@ -119,7 +119,7 @@ def _serialize_arg(val):
 
 
 def _deserialize_arg(app, val):
-    if isinstance(val, basestring):
+    if isinstance(val, str):
         if val.startswith(_object_marker):
             val = val[len(_object_marker):]
             val = app.unrestrictedTraverse(val)
