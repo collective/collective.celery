@@ -3,16 +3,16 @@ Tips and tricks
 
 .. _usage-always-eager:
 
-Usage of ``CELERY_ALWAYS_EAGER``
+Usage of ``CELERY_TASK_ALWAYS_EAGER``
 --------------------------------
 
-The ``CELERY_ALWAYS_EAGER`` setting is very useful when developing, and also the only available option to test your tasks without going mad [#]_.
+The ``CELERY_TASK_ALWAYS_EAGER`` setting is very useful when developing, and also the only available option to test your tasks without going mad [#]_.
 
 In a nutshell, it works by completely skipping the whole "enqueing the task and letting the worker run it" part of Celery and directly executing the task when you "queue" it.
 
 But since we do always delay the actual execution after the transaction has committed (see :ref:`execution-model`) this doesn't go as simply as stated.
 
-While the testing layer sets up evrything for you without you having to worry about these nasty details (see :ref:`developing-and-testing`) when you are developing with ``CELERY_ALWAYS_EAGER`` enabled you **must** provide a result backend for celery to use (else retrieving tasks result will break horribly).
+While the testing layer sets up evrything for you without you having to worry about these nasty details (see :ref:`developing-and-testing`) when you are developing with ``CELERY_TASK_ALWAYS_EAGER`` enabled you **must** provide a result backend for celery to use (else retrieving tasks result will break horribly).
 
 There are two backends that you can use:
 

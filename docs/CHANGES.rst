@@ -4,7 +4,11 @@ Changelog
 1.1.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- fix use of CELERY_TASK_ALWAYS_EAGER
+  [vangheem]
+  
+- Python 3/Plone 5.2 support
+  [vangheem]
 
 
 1.1.0 (2018-10-12)

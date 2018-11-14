@@ -10,10 +10,10 @@ import Zope2
 
 
 try:
-    from celery import registry
-except ImportError:
     # Celery >= 3.1
     from celery import current_app as registry
+except ImportError:
+    from celery import registry
 
 
 _local = threading.local()
@@ -58,6 +58,9 @@ def getCeleryOptions():
 
     config = {}
     for key, value in environ:
+        # b/w interpret settings for latest celery
+        key = key.replace('CELERY_', '').replace(
+            'CELERYBEAT_', 'beat_').replace('CELERYD_', 'worker_').lower()
         opt_type = _options.get(key)
         if opt_type:
             if opt_type[0] == str:
@@ -65,7 +68,7 @@ def getCeleryOptions():
             elif opt_type[0] is object:
                 try:
                     value = eval(value)
-                except:
+                except Exception:
                     pass  # any can be anything; even a string
             elif not isinstance(value, opt_type[0]):
                 value = opt_type[1](value)

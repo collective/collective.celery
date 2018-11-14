@@ -124,7 +124,7 @@ If you are developing, and do not want the hassle of setting up a ZEO server and
 
     environment-vars =
         ...
-        CELERY_ALWAYS_EAGER True
+        CELERY_TASK_ALWAYS_EAGER True
     # CELERY_IMPORTS is required to load your tasks correctly for your project
         CELERY_IMPORTS ('my.package.tasks',)
     # basic example just using sqlalchemy
@@ -132,11 +132,11 @@ If you are developing, and do not want the hassle of setting up a ZEO server and
         CELERY_RESULT_BACKEND db+sqlite:///${buildout:directory}/celeryresults.sqlite?timeout=30
         ...
 
-In this way, thanks to the `CELERY_ALWAYS_EAGER setting <http://celery.readthedocs.org/en/latest/configuration.html#celery-always-eager>`_, celery will not send the task to the worker at all but execute immediately when ``delay`` or ``apply_async`` are called.
+In this way, thanks to the `CELERY_TASK_ALWAYS_EAGER setting <http://celery.readthedocs.org/en/latest/configuration.html#celery-always-eager>`_, celery will not send the task to the worker at all but execute immediately when ``delay`` or ``apply_async`` are called.
 
 Similarly, in tests, we provide a layer that does the following:
 
- #. Set ``CELERY_ALWAYS_EAGER`` for you, so any function you are testing that calls an asyncroinous function will have that function executed after commit (see :doc:`execution-model`)
+ #. Set ``CELERY_TASK_ALWAYS_EAGER`` for you, so any function you are testing that calls an asyncroinous function will have that function executed after commit (see :doc:`execution-model`)
  #. Use a simple, in-memory SQLite database to store results
 
 To use it, your package should depend, in its ``test`` extra requirement, from ``collective.celery[test]``::

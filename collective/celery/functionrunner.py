@@ -61,7 +61,7 @@ class FunctionRunner(object):
 
     def __call__(self):
         celery = getCelery()
-        if celery.conf.CELERY_ALWAYS_EAGER:
+        if celery.conf.task_always_eager:
             self.eager = True
             # dive out of setup, this is not run in a celery task runner
             self.app = getApp()
