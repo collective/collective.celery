@@ -16,7 +16,7 @@ class BaseTestCase(unittest.TestCase):
     layer = COLLECTIVE_CELERY_INTEGRATION_TESTING
 
     def setUp(self):
-        getCelery().conf['CELERY_ALWAYS_EAGER'] = 'True'
+        getCelery().conf['task_always_eager'] = True
         # use in-memory sqlite
         getCelery().conf['BROKER_URL'] = "sqla+sqlite://"
         getCelery().conf['CELERY_RESULT_BACKEND'] = "db+sqlite://"

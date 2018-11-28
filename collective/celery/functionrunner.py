@@ -1,23 +1,19 @@
-from AccessControl.SecurityManagement import newSecurityManager
-from AccessControl.SecurityManagement import noSecurityManager
+import traceback
+
+import transaction
+from AccessControl.SecurityManagement import (newSecurityManager,
+                                              noSecurityManager)
 from celery.exceptions import Retry
 from celery.utils.log import get_task_logger
 from collective.celery.base_task import AfterCommitTask
-from collective.celery.utils import _deserialize_arg
-from collective.celery.utils import getApp
-from collective.celery.utils import getCelery
+from collective.celery.utils import _deserialize_arg, getApp, getCelery
 from plone import api
 from Testing.makerequest import makerequest
 from ZODB.POSException import ConflictError
-from zope.app.publication.interfaces import BeforeTraverseEvent
 from zope.component.hooks import setSite
 from zope.event import notify
-from zope.globalrequest import clearRequest
-from zope.globalrequest import setRequest
-
-import traceback
-import transaction
-
+from zope.globalrequest import clearRequest, setRequest
+from zope.traversing.interfaces import BeforeTraverseEvent
 
 logger = get_task_logger(__name__)
 
@@ -65,7 +61,7 @@ class FunctionRunner(object):
 
     def __call__(self):
         celery = getCelery()
-        if celery.conf.CELERY_ALWAYS_EAGER:
+        if celery.conf.task_always_eager:
             self.eager = True
             # dive out of setup, this is not run in a celery task runner
             self.app = getApp()
@@ -82,11 +78,11 @@ class FunctionRunner(object):
                 # commit transaction
                 transaction.commit()
                 return result
-            except ConflictError, e:
+            except ConflictError as e:
                 # On ZODB conflicts, retry using celery's mechanism
                 transaction.abort()
                 raise Retry(exc=e)
-            except:
+            except Exception:
                 logger.warn('Error running task: %s' % traceback.format_exc())
                 transaction.abort()
                 raise

@@ -31,7 +31,7 @@ setup(name='collective.celery',
       zip_safe=False,
       install_requires=[
           'setuptools',
-          'celery',
+          'celery>=4',
           'plone.api'
       ],
       extras_require={

@@ -53,6 +53,7 @@ class CelerySynchronizer(object):
     def newTransaction(self, txn):
         pass
 
+
 celery_synch = CelerySynchronizer()
 
 
@@ -102,7 +103,7 @@ class AfterCommitTask(Task):
         task_id = uuid()
 
         # Construct a fake result
-        if celery.conf.CELERY_ALWAYS_EAGER:
+        if celery.conf.task_always_eager:
             result_ = EagerResult(task_id, None, states.PENDING, None)
         else:
             result_ = result.AsyncResult(task_id)
@@ -110,7 +111,7 @@ class AfterCommitTask(Task):
         # Note: one might be tempted to turn this into a datamanager.
         # This would result in two wrong things happening:
         # * A "commit within a commit" triggered by the function runner
-        #   when CELERY_ALWAYS_EAGER is set,
+        #   when CELERY_TASK_ALWAYS_EAGER is set,
         #   leading to the first invoked commit cleanup failing
         #   because the inner commit already cleaned up.
         # * An async task failing in eager mode would also rollback
@@ -119,7 +120,7 @@ class AfterCommitTask(Task):
         #   and the async task updates it, if we roll back everything
         #   then also the original content construction goes away
         #   (even if, in and by itself, worked)
-        if without_transaction or celery.conf.CELERY_ALWAYS_EAGER:
+        if without_transaction or celery.conf.task_always_eager:
             return self._apply_async(args, kw, result_, celery, task_id, options)
         else:
             queue_task_after_commit(args, kw, self, task_id, options)
@@ -133,7 +134,7 @@ class AfterCommitTask(Task):
             task_id=task_id,
             **options
         )
-        if celery.conf.CELERY_ALWAYS_EAGER:
+        if celery.conf.task_always_eager:
             result_._state = effective_result._state
             result_._result = effective_result._result
             result_._traceback = effective_result._traceback
