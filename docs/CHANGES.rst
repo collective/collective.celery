@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.1.1 (unreleased)
+1.1.1 (2018-11-28)
 ------------------
 
 - fix use of CELERY_TASK_ALWAYS_EAGER
