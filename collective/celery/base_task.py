@@ -53,6 +53,7 @@ class CelerySynchronizer(object):
     def newTransaction(self, txn):
         pass
 
+
 celery_synch = CelerySynchronizer()
 
 
