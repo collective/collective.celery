@@ -45,6 +45,12 @@ _options = dict(
     if opt.type in _types
 )
 
+_defaults = {
+    'task_serializer': 'pickle',
+    'result_serializer': 'pickle',
+    'accept_content': ['application/json', 'application/x-python-serialize']
+}
+
 _object_marker = 'object://'
 
 
@@ -56,7 +62,7 @@ def getCeleryOptions():
         # sort of for testing...
         environ = os.environ.items()
 
-    config = {}
+    config = _defaults.copy()
     for key, value in environ:
         # b/w interpret settings for latest celery
         key = key.replace('CELERY_', '').replace(

@@ -4,7 +4,8 @@ Changelog
 1.1.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Use pickle transport by default to not break b/w compat
+  [vangheem]
 
 
 1.1.1 (2018-11-28)
