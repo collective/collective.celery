@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.1.2 (unreleased)
+1.1.2 (2018-12-04)
 ------------------
 
 - Use pickle transport by default to not break b/w compat
