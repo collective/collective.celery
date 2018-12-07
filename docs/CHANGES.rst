@@ -4,7 +4,8 @@ Changelog
 1.1.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix checking of duplicate task
+  [vangheem]
 
 
 1.1.3 (2018-12-06)

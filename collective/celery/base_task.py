@@ -38,11 +38,11 @@ class CelerySynchronizer(object):
             tasks = getattr(txn, '_celery_tasks', [])
             executed = []
             for args, kw, task, task_id, options in tasks:
-                if (args, kw, options) in executed:
+                if (args, kw, options, task.name) in executed:
                     # make sure task was not sent multiple times
                     # by ignoring tasks with exact same args.
                     continue
-                executed.append((args, kw, options))
+                executed.append((args, kw, options, task.name))
                 super(AfterCommitTask, task).apply_async(
                     args=args,
                     kwargs=kw,
