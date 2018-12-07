@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.1.3 (unreleased)
+1.1.3 (2018-12-06)
 ------------------
 
 - Fix use of always eager with newly created content
