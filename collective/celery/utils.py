@@ -127,9 +127,9 @@ def _serialize_arg(val):
     return val
 
 
-def _deserialize_arg(app, val):
+def _deserialize_arg(site, val):
     if isinstance(val, str):
         if val.startswith(_object_marker):
             val = val[len(_object_marker):]
-            val = app.unrestrictedTraverse(val)
+            val = site.unrestrictedTraverse(val)
     return val

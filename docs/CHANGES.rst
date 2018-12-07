@@ -4,7 +4,8 @@ Changelog
 1.1.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix use of always eager with newly created content
+  [vangheem]
 
 
 1.1.2 (2018-12-04)

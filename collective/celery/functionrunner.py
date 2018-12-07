@@ -38,9 +38,9 @@ class FunctionRunner(object):
         args = []
         kw = {}
         for arg in self.orig_args:
-            args.append(_deserialize_arg(self.app, arg))
+            args.append(_deserialize_arg(self.site, arg))
         for key, value in self.orig_kw.items():
-            kw[key] = _deserialize_arg(self.app, value)
+            kw[key] = _deserialize_arg(self.site, value)
 
         return args, kw
 
@@ -50,9 +50,11 @@ class FunctionRunner(object):
     def _run(self):
         self.userid = self.orig_kw.pop('authorized_userid')
         site_path = self.orig_kw.pop('site_path')
-        if self.app is None:
+        try:
             self.site = api.portal.get()
-        else:
+        except api.exc.CannotGetPortalError:
+            pass
+        if self.site is None:
             self.site = self.app.unrestrictedTraverse(site_path)
         self.authorize()
         args, kw = self.deserialize_args()  # noqa
