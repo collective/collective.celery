@@ -87,20 +87,34 @@ class AfterCommitTask(Task):
     # set object paths instead of objects
     def apply_async(self, args, kwargs, **options):
         args, kw = self.serialize_args(args, kwargs)
-        kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
-        kw['authorized_userid'] = api.user.get_current().getId()
+
+        # Let's see if this is a retry. An existing task means yes.
+        # If it is one, we'll call _apply_async directly later on.
+        task = getattr(self.request, 'task', None)
+        task_id = options.get('task_id', None)
+
+        # if task is not None we are in a retry and site_path and
+        # authorized_userid are already in kw
+        if task is None:
+            kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
+            kw['authorized_userid'] = api.user.get_current().getId()
 
         without_transaction = options.pop('without_transaction', False)
 
         celery = getCelery()
-        # Here we cheat a little: since we will not start the task
-        # up until the transaction is done,
-        # we cannot give back to whoever called apply_async
-        # its much beloved AsyncResult.
-        # But we can actually pass the task a specific task_id
-        # (although it's not very documented)
-        # and an AsyncResult at this point is just that id, basically.
-        task_id = uuid()
+        if task_id is None:
+            # Here we cheat a little: since we will not start the task
+            # up until the transaction is done,
+            # we cannot give back to whoever called apply_async
+            # its much beloved AsyncResult.
+            # But we can actually pass the task a specific task_id
+            # (although it's not very documented)
+            # and an AsyncResult at this point is just that id, basically.
+            task_id = uuid()
+        else:
+            # If this is a retry, task_id will be in the options.
+            # Get rid of it to avoid an error.
+            del options['task_id']
 
         # Construct a fake result
         if celery.conf.task_always_eager:
@@ -120,7 +134,7 @@ class AfterCommitTask(Task):
         #   and the async task updates it, if we roll back everything
         #   then also the original content construction goes away
         #   (even if, in and by itself, worked)
-        if without_transaction or celery.conf.task_always_eager:
+        if without_transaction or celery.conf.task_always_eager or task:
             return self._apply_async(args, kw, result_, celery, task_id, options)
         else:
             queue_task_after_commit(args, kw, self, task_id, options)
