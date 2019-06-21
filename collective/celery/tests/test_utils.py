@@ -45,7 +45,7 @@ class TestHelpers(BaseTestCase):
     def test_getCeleryOptions(self):
         os.environ['CELERY_TEST'] = 'True'
         result = getCeleryOptions()
-        self.assertIn('CELERY_TEST', result)
+        self.assertIn('test', result)
 
     def test_getApp(self):
         app = getApp()
