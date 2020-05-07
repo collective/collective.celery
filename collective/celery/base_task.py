@@ -96,8 +96,16 @@ class AfterCommitTask(Task):
         # if task is not None we are in a retry and site_path and
         # authorized_userid are already in kw
         if task is None:
-            kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
-            kw['authorized_userid'] = api.user.get_current().getId()
+            try:
+                kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
+            except api.exc.PloneApiError:
+                pass
+            try:
+                user = api.user.get_current()
+                if user is not None:
+                    kw['authorized_userid'] = user.getId()
+            except api.exc.PloneApiError:
+                pass
 
         without_transaction = options.pop('without_transaction', False)
 

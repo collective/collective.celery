@@ -4,6 +4,9 @@ Changelog
 1.1.5 (unreleased)
 ------------------
 
+- Fix ConflictError retries, and retries for tasks run using `celery call`.
+  [alecpm]
+
 - Allow tasks to be retried.
   [enfold_josh]
 
