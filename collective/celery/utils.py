@@ -85,11 +85,11 @@ def getCeleryOptions():
 def _getCelery():
     celery.add_defaults(getCeleryOptions())
     # delete cached property in order to get them reloaded from the new conf
-    del(celery.backend)
+    bk = celery.backend
     for name, task in registry.tasks.items():
         # ensure that every already registed tasks doens use an unconfigured
         # backend.
-        task.backend = celery.backend
+        task.backend = bk
     return celery
 
 
