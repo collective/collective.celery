@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 # This is all pulled out of David Glick's gist on github
 # https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py
+import weakref
 from .base_task import AfterCommitTask
 from celery import current_app
 from celery.signals import after_task_publish
@@ -34,7 +35,10 @@ class _task(object):
                 runner = AuthorizedFunctionRunner(func, new_func, args, kw, task_kw)  # noqa
                 return runner()
             new_func.__name__ = func.__name__
-            return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            if not task_kw.get('bind'):
+                new_func._task = weakref.ref(task)
+            return task
         return decorator
 
     def as_admin(self, **task_kw):
@@ -43,8 +47,12 @@ class _task(object):
                 runner = AdminFunctionRunner(func, new_func, args, kw, task_kw)
                 return runner()
             new_func.__name__ = func.__name__
-            return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            if not task_kw.get('bind'):
+                new_func._task = weakref.ref(task)
+            return task
         return decorator
+
 
 task = _task()
 task.__doc__ = """This decorator "wraps" the celery task decorator

@@ -91,13 +91,18 @@ class AfterCommitTask(Task):
         # Let's see if this is a retry. An existing task means yes.
         # If it is one, we'll call _apply_async directly later on.
         task = getattr(self.request, 'task', None)
+        if task is not None and options.get('retries'):
+            self.request.retries = options['retries']
         task_id = options.get('task_id', None)
 
-        # if task is not None we are in a retry and site_path and
-        # authorized_userid are already in kw
-        if task is None:
+        # Only look up site_path and authorized_userid if we don't already have
+        # them
+        if 'site_path' not in kw:
             kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
-            kw['authorized_userid'] = api.user.get_current().getId()
+        if 'authorized_userid' not in kw:
+            user = api.user.get_current()
+            if user is not None:
+                kw['authorized_userid'] = user.getId()
 
         without_transaction = options.pop('without_transaction', False)
 
