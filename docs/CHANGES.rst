@@ -4,6 +4,9 @@ Changelog
 1.1.5 (unreleased)
 ------------------
 
+- Check if using wsgi.
+  [oggers]
+
 - Allow tasks to be retried.
   [enfold_josh]
 
