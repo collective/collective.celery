@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.1.5 (unreleased)
+2.0.0 (unreleased)
 ------------------
 
 - Support Plone 6.2 and Python 3 only: always start Zope with
