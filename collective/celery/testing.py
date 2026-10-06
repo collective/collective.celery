@@ -1,6 +1,6 @@
 from plone.app.testing import PloneSandboxLayer, PLONE_FIXTURE, \
     IntegrationTesting
-from plone.testing import z2
+from plone.testing.zope import installProduct, uninstallProduct
 from zope.configuration import xmlconfig
 from plone.app.testing import applyProfile
 
@@ -16,10 +16,10 @@ class CollectiveCeleryLayer(PloneSandboxLayer):
             collective.celery,
             context=configurationContext
         )
-        z2.installProduct(app, 'collective.celery')
+        installProduct(app, 'collective.celery')
 
     def tearDownZope(self, app):
-        z2.uninstallProduct(app, 'collective.celery')
+        uninstallProduct(app, 'collective.celery')
 
     def setUpPloneSite(self, portal):
         # Install into Plone site using portal_setup

@@ -1,8 +1,27 @@
 Changelog
 =========
 
-1.1.5 (unreleased)
+2.0.0 (unreleased)
 ------------------
+
+- Support Plone 6.2 and Python 3 only: always start Zope with
+  ``configure_wsgi`` and remove the ``six`` import.
+
+- Allow to queue tasks outside of Zope (for example from Celery beat).
+  Give a ``site_path`` keyword argument. The task is sent immediately.
+
+- Use the module and the name of the decorated function for the task name.
+  Before, all tasks were named ``collective.celery.<function name>``.
+
+- Import all the modules given in ``CELERY_TASKS``.
+
+- Do not fail in ``update_sent_state`` for tasks that are not registered.
+
+- Fix ConflictError retries, and retries for tasks run using `celery call`.
+  [alecpm]
+
+- Check if using wsgi.
+  [oggers]
 
 - Allow tasks to be retried.
   [enfold_josh]

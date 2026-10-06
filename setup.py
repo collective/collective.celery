@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.1.5.dev0'
+version = '2.0.0.dev0'
 
 setup(name='collective.celery',
       version=version,
@@ -14,11 +14,10 @@ setup(name='collective.celery',
       # http://pypi.python.org/pypi?:action=list_classifiers
       classifiers=[
           "Programming Language :: Python",
-          "Framework :: Plone :: 4.0",
-          "Framework :: Plone :: 4.1",
-          "Framework :: Plone :: 4.2",
-          "Framework :: Plone :: 4.3",
-          "Framework :: Plone :: 5.0",
+          "Framework :: Plone :: 6.0",
+          "Framework :: Plone :: 6.1",
+          "Framework :: Plone :: 6.2",
+          "Programming Language :: Python :: 3",
       ],
       keywords='celery async plone',
       author='Nathan Van Gheem',
@@ -29,9 +28,10 @@ setup(name='collective.celery',
       namespace_packages=['collective'],
       include_package_data=True,
       zip_safe=False,
+      python_requires='>=3.10',
       install_requires=[
           'setuptools',
-          'celery>=4',
+          'celery>=5',
           'plone.api'
       ],
       extras_require={

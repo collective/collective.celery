@@ -3,6 +3,7 @@ import traceback
 import transaction
 from AccessControl.SecurityManagement import (newSecurityManager,
                                               noSecurityManager)
+from celery import Task
 from celery.exceptions import Retry
 from celery.utils.log import get_task_logger
 from collective.celery.base_task import AfterCommitTask
@@ -48,7 +49,8 @@ class FunctionRunner(object):
         pass
 
     def _run(self):
-        self.userid = self.orig_kw.pop('authorized_userid')
+        if 'authorized_userid' in self.orig_kw:
+            self.userid = self.orig_kw.pop('authorized_userid')
         site_path = self.orig_kw.pop('site_path')
         try:
             self.site = api.portal.get()
@@ -83,6 +85,24 @@ class FunctionRunner(object):
             except ConflictError as e:
                 # On ZODB conflicts, retry using celery's mechanism
                 transaction.abort()
+                logger.warn('ConflictError running task, attempting retry: %s' %
+                            traceback.format_exc())
+                # Retry generally only works within a task context or from the
+                # task itself
+                task = None
+                args, kw = self.deserialize_args()  # noqa
+                # Try to get task from args, will work if `bind=True`
+                if args and isinstance(args[0], Task):
+                    task = args[0]
+                else:
+                    # Out task decorator adds a task weakref to unbound task
+                    # functions, check for that
+                    task_ref = getattr(self.new_func, '_task', None)
+                    if callable(task_ref):
+                        task = task_ref()
+                if isinstance(task, Task):
+                    raise task.retry(exc=e, throw=False)
+                # This will set the task state to Retry, but won't retry it
                 raise Retry(exc=e)
             except Exception:
                 logger.warn('Error running task: %s' % traceback.format_exc())

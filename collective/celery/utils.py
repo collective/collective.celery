@@ -56,14 +56,13 @@ _object_marker = 'object://'
 
 def getCeleryOptions():
     zconfig = getConfiguration()
+    environ = os.environ.copy()
     if hasattr(zconfig, 'environment'):
-        environ = zconfig.environment.items()
-    else:
-        # sort of for testing...
-        environ = os.environ.items()
+        # the zope.conf environment overrides os.environ
+        environ.update(zconfig.environment.copy())
 
     config = _defaults.copy()
-    for key, value in environ:
+    for key, value in environ.items():
         # b/w interpret settings for latest celery
         key = key.replace('CELERY_', '').replace(
             'CELERYBEAT_', 'beat_').replace('CELERYD_', 'worker_').lower()
@@ -85,11 +84,11 @@ def getCeleryOptions():
 def _getCelery():
     celery.add_defaults(getCeleryOptions())
     # delete cached property in order to get them reloaded from the new conf
-    del(celery.backend)
+    backend = celery.backend
     for name, task in registry.tasks.items():
         # ensure that every already registed tasks doens use an unconfigured
         # backend.
-        task.backend = celery.backend
+        task.backend = backend
     return celery
 
 

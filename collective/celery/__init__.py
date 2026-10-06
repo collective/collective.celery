@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 # This is all pulled out of David Glick's gist on github
 # https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py
+import weakref
 from .base_task import AfterCommitTask
 from celery import current_app
 from celery.signals import after_task_publish
@@ -10,6 +11,14 @@ from collective.celery.utils import getCelery
 
 
 TESTING = False
+
+
+def _copy_name(func, new_func):
+    # Celery makes the task name from the module and the function name.
+    new_func.__module__ = func.__module__
+    new_func.__name__ = func.__name__
+    new_func.__qualname__ = func.__qualname__
+    new_func.__doc__ = func.__doc__
 
 
 def initialize(context):
@@ -33,8 +42,11 @@ class _task(object):
             def new_func(*args, **kw):
                 runner = AuthorizedFunctionRunner(func, new_func, args, kw, task_kw)  # noqa
                 return runner()
-            new_func.__name__ = func.__name__
-            return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            _copy_name(func, new_func)
+            task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            if not task_kw.get('bind'):
+                new_func._task = weakref.ref(task)
+            return task
         return decorator
 
     def as_admin(self, **task_kw):
@@ -42,9 +54,13 @@ class _task(object):
             def new_func(*args, **kw):
                 runner = AdminFunctionRunner(func, new_func, args, kw, task_kw)
                 return runner()
-            new_func.__name__ = func.__name__
-            return getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            _copy_name(func, new_func)
+            task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
+            if not task_kw.get('bind'):
+                new_func._task = weakref.ref(task)
+            return task
         return decorator
+
 
 task = _task()
 task.__doc__ = """This decorator "wraps" the celery task decorator
@@ -70,4 +86,6 @@ Which will execute the task in an unrestricted environment.
 def update_sent_state(sender=None, body=None, **kwargs):
     """so we can know if a task was scheduled"""
     task = current_app.tasks.get(sender)
+    if task is None:
+        return
     task.update_state(task_id=kwargs['headers']['id'], state="SENT")
