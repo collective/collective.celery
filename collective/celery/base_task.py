@@ -6,6 +6,7 @@ from collective.celery.utils import getCelery
 from kombu.utils import uuid
 from plone import api
 from transaction.interfaces import ISynchronizer
+from zope.component.hooks import getSite
 from zope.interface import implementer
 
 import transaction
@@ -95,16 +96,26 @@ class AfterCommitTask(Task):
             self.request.retries = options['retries']
         task_id = options.get('task_id', None)
 
+        # Outside of Zope (for example in Celery beat) there is no site.
+        # The caller must then give site_path. The task is sent immediately,
+        # because there is no Zope transaction to wait for.
+        outside_zope = getSite() is None
+
         # Only look up site_path and authorized_userid if we don't already have
         # them
         if 'site_path' not in kw:
+            if outside_zope:
+                raise ValueError(
+                    'No site found. Give a site_path keyword argument to '
+                    'queue the task {} outside of Zope.'.format(self.name))
             kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
-        if 'authorized_userid' not in kw:
+        if 'authorized_userid' not in kw and not outside_zope:
             user = api.user.get_current()
             if user is not None:
                 kw['authorized_userid'] = user.getId()
 
-        without_transaction = options.pop('without_transaction', False)
+        without_transaction = (
+            options.pop('without_transaction', False) or outside_zope)
 
         celery = getCelery()
         if task_id is None:

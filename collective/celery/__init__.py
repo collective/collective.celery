@@ -13,6 +13,14 @@ from collective.celery.utils import getCelery
 TESTING = False
 
 
+def _copy_name(func, new_func):
+    # Celery makes the task name from the module and the function name.
+    new_func.__module__ = func.__module__
+    new_func.__name__ = func.__name__
+    new_func.__qualname__ = func.__qualname__
+    new_func.__doc__ = func.__doc__
+
+
 def initialize(context):
     pass
 
@@ -34,7 +42,7 @@ class _task(object):
             def new_func(*args, **kw):
                 runner = AuthorizedFunctionRunner(func, new_func, args, kw, task_kw)  # noqa
                 return runner()
-            new_func.__name__ = func.__name__
+            _copy_name(func, new_func)
             task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
             if not task_kw.get('bind'):
                 new_func._task = weakref.ref(task)
@@ -46,7 +54,7 @@ class _task(object):
             def new_func(*args, **kw):
                 runner = AdminFunctionRunner(func, new_func, args, kw, task_kw)
                 return runner()
-            new_func.__name__ = func.__name__
+            _copy_name(func, new_func)
             task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
             if not task_kw.get('bind'):
                 new_func._task = weakref.ref(task)
@@ -78,4 +86,6 @@ Which will execute the task in an unrestricted environment.
 def update_sent_state(sender=None, body=None, **kwargs):
     """so we can know if a task was scheduled"""
     task = current_app.tasks.get(sender)
+    if task is None:
+        return
     task.update_state(task_id=kwargs['headers']['id'], state="SENT")

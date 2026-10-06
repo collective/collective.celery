@@ -2,7 +2,6 @@
 from importlib import import_module
 from importlib.metadata import entry_points
 import os
-import six
 import sys
 
 from App.config import getConfiguration
@@ -41,24 +40,8 @@ def main(argv=sys.argv):
     filepath = sys.argv[conf_index]
     os.environ['ZOPE_CONFIG'] = filepath
     sys.argv = ['']
-    if '--wsgi' in argv or '-w' in argv:
-        try:
-            idx = argv.index('--wsgi')
-        except ValueError:
-            idx = argv.index('-w')
-        opt = argv[idx + 1:idx + 2]
-        if opt:
-            wsgi = opt[0].lower() in ('off', 'false', '0')
-        else:
-            wsgi = True
-    else:
-        wsgi = False
-    if six.PY2 and not wsgi:
-        from Zope2.Startup.run import configure
-        startup = configure(os.environ['ZOPE_CONFIG'])
-    else:
-        from Zope2.Startup.run import configure_wsgi
-        startup = configure_wsgi(os.environ['ZOPE_CONFIG'])
+    from Zope2.Startup.run import configure_wsgi
+    startup = configure_wsgi(os.environ['ZOPE_CONFIG'])
 
     # Fix for setuptools generated scripts, so that it will
     # work with multiprocessing fork emulation.
@@ -72,14 +55,14 @@ def main(argv=sys.argv):
         try:
             tasks.append((entry_point.name, entry_point.load()))
         except ImportError:
-            logger.warn('error importing tasks: ' + entry_point.name)
+            logger.warning('error importing tasks: ' + entry_point.name)
             raise
     tasks = dict(tasks)
     for name, task_list in tasks.items():
-        logger.warn('importing tasks: ' + name)
+        logger.warning('importing tasks: ' + name)
         extra_config = getattr(task_list, 'extra_config', None)
         if extra_config is not None:
-            logger.warn('Found additional Zope config.')
+            logger.warning('Found additional Zope config.')
             extra_config(startup)
 
     # load env tasks up
@@ -87,14 +70,14 @@ def main(argv=sys.argv):
     if tasks:
         for task_list in tasks.split():
             try:
-                logger.warn('importing tasks: ' + tasks)
-                module = import_module(tasks)
+                logger.warning('importing tasks: ' + task_list)
+                module = import_module(task_list)
                 extra_config = getattr(module, 'extra_config', None)
                 if extra_config is not None:
-                    logger.warn('Found additional Zope config.')
+                    logger.warning('Found additional Zope config.')
                     extra_config(startup)
             except ImportError:
-                logger.warn('error importing tasks: ' + tasks)
+                logger.warning('error importing tasks: ' + task_list)
                 raise
     argv.remove(filepath)
     # restore argv
