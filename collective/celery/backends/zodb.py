@@ -11,10 +11,9 @@ from ZODB.POSException import ConflictError
 import time
 import Zope2
 
-
 logger = get_logger(__name__)
 
-ROOT_KEY = 'collective.celery'
+ROOT_KEY = "collective.celery"
 MAX_ATTEMPTS = 3
 BATCH_SIZE = 500
 
@@ -42,15 +41,14 @@ class ZODBBackend(KeyValueStoreBackend):
     key_t = bytes_to_str
 
     def __init__(self, url=None, *args, **kwargs):
-        if url is not None and url != 'zodb://':
-            raise ImproperlyConfigured(
-                'The ZODB result backend URL must be "zodb://".')
+        if url is not None and url != "zodb://":
+            raise ImproperlyConfigured('The ZODB result backend URL must be "zodb://".')
         super().__init__(*args, **kwargs)
         self.url = url
 
     def __reduce__(self, args=(), kwargs=None):
         kwargs = {} if not kwargs else kwargs
-        return super().__reduce__(args, {**kwargs, 'url': self.url})
+        return super().__reduce__(args, {**kwargs, "url": self.url})
 
     def _run(self, func, write):
         """Call func(tree) in a private connection and transaction.
@@ -81,8 +79,10 @@ class ZODBBackend(KeyValueStoreBackend):
                 if attempt == attempts:
                     raise
                 logger.warning(
-                    'ZODB result backend: conflict, retry %s of %s',
-                    attempt, attempts - 1)
+                    "ZODB result backend: conflict, retry %s of %s",
+                    attempt,
+                    attempts - 1,
+                )
                 time.sleep(0.05 * attempt)
             except Exception:
                 tm.abort()
@@ -94,12 +94,14 @@ class ZODBBackend(KeyValueStoreBackend):
         def read(tree):
             record = None if tree is None else tree.get(key)
             return None if record is None else record.payload
+
         return self._run(read, write=False)
 
     def mget(self, keys):
         def read(tree):
             records = [None if tree is None else tree.get(k) for k in keys]
             return [None if r is None else r.payload for r in records]
+
         return self._run(read, write=False)
 
     def set(self, key, value):
@@ -112,11 +114,13 @@ class ZODBBackend(KeyValueStoreBackend):
             else:
                 record.stamp = time.time()
                 record.payload = value
+
         self._run(store, write=True)
 
     def delete(self, key):
         def remove(tree):
             tree.pop(key, None)
+
         self._run(remove, write=True)
 
     def cleanup(self):
@@ -129,6 +133,7 @@ class ZODBBackend(KeyValueStoreBackend):
             if tree is None:
                 return []
             return [k for k, r in tree.items() if r.stamp < cutoff]
+
         expired = self._run(collect, write=False)
 
         def purge(batch):
@@ -141,13 +146,14 @@ class ZODBBackend(KeyValueStoreBackend):
                         del tree[key]
                         count += 1
                 return count
+
             return remove
 
         deleted = 0
         for start in range(0, len(expired), BATCH_SIZE):
-            batch = expired[start:start + BATCH_SIZE]
+            batch = expired[start : start + BATCH_SIZE]
             deleted += self._run(purge(batch), write=True)
-        logger.info('ZODB result backend: deleted %s expired records', deleted)
+        logger.info("ZODB result backend: deleted %s expired records", deleted)
 
     def exception_safe_to_retry(self, exc):
         return isinstance(exc, ConflictError)

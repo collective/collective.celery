@@ -19,7 +19,7 @@ class EagerResult(result.EagerResult):
 
 
 @implementer(ISynchronizer)
-class CelerySynchronizer(object):
+class CelerySynchronizer:
     """Handles communication with celery at transaction boundaries.
     We previously used after-commit hooks, but the transaction package
     swallows exceptions in commit hooks.
@@ -29,14 +29,14 @@ class CelerySynchronizer(object):
         pass
 
     def afterCompletion(self, txn):
-        """Called after commit or abort
-        """
+        """Called after commit or abort"""
         # Skip if running tests
         import collective.celery
+
         if collective.celery.TESTING:
             return False
         if txn.status == transaction._transaction.Status.COMMITTED:
-            tasks = getattr(txn, '_celery_tasks', [])
+            tasks = getattr(txn, "_celery_tasks", [])
             executed = []
             for args, kw, task, task_id, options in tasks:
                 if (args, kw, options, task.name) in executed:
@@ -45,10 +45,7 @@ class CelerySynchronizer(object):
                     continue
                 executed.append((args, kw, options, task.name))
                 super(AfterCommitTask, task).apply_async(
-                    args=args,
-                    kwargs=kw,
-                    task_id=task_id,
-                    **options
+                    args=args, kwargs=kw, task_id=task_id, **options
                 )
 
     def newTransaction(self, txn):
@@ -62,7 +59,7 @@ def queue_task_after_commit(args, kw, task, task_id, options):
     transaction.manager.registerSynch(celery_synch)
 
     txn = transaction.get()
-    if not hasattr(txn, '_celery_tasks'):
+    if not hasattr(txn, "_celery_tasks"):
         txn._celery_tasks = []
     txn._celery_tasks.append((args, kw, task, task_id, options))
 
@@ -72,6 +69,7 @@ class AfterCommitTask(Task):
 
     This is intended for tasks scheduled from inside Zope.
     """
+
     abstract = True
 
     def serialize_args(self, orig_args, orig_kw):
@@ -91,10 +89,10 @@ class AfterCommitTask(Task):
 
         # Let's see if this is a retry. An existing task means yes.
         # If it is one, we'll call _apply_async directly later on.
-        task = getattr(self.request, 'task', None)
-        if task is not None and options.get('retries'):
-            self.request.retries = options['retries']
-        task_id = options.get('task_id', None)
+        task = getattr(self.request, "task", None)
+        if task is not None and options.get("retries"):
+            self.request.retries = options["retries"]
+        task_id = options.get("task_id", None)
 
         # Outside of Zope (for example in Celery beat) there is no site.
         # The caller must then give site_path. The task is sent immediately,
@@ -103,19 +101,19 @@ class AfterCommitTask(Task):
 
         # Only look up site_path and authorized_userid if we don't already have
         # them
-        if 'site_path' not in kw:
+        if "site_path" not in kw:
             if outside_zope:
                 raise ValueError(
-                    'No site found. Give a site_path keyword argument to '
-                    'queue the task {} outside of Zope.'.format(self.name))
-            kw['site_path'] = '/'.join(api.portal.get().getPhysicalPath())
-        if 'authorized_userid' not in kw and not outside_zope:
+                    "No site found. Give a site_path keyword argument to "
+                    "queue the task {} outside of Zope.".format(self.name)
+                )
+            kw["site_path"] = "/".join(api.portal.get().getPhysicalPath())
+        if "authorized_userid" not in kw and not outside_zope:
             user = api.user.get_current()
             if user is not None:
-                kw['authorized_userid'] = user.getId()
+                kw["authorized_userid"] = user.getId()
 
-        without_transaction = (
-            options.pop('without_transaction', False) or outside_zope)
+        without_transaction = options.pop("without_transaction", False) or outside_zope
 
         celery = getCelery()
         if task_id is None:
@@ -130,7 +128,7 @@ class AfterCommitTask(Task):
         else:
             # If this is a retry, task_id will be in the options.
             # Get rid of it to avoid an error.
-            del options['task_id']
+            del options["task_id"]
 
         # Construct a fake result
         if celery.conf.task_always_eager:
@@ -146,7 +144,7 @@ class AfterCommitTask(Task):
         #   because the inner commit already cleaned up.
         # * An async task failing in eager mode would also rollback
         #   the whole transaction, which is not desiderable.
-        #   Consider the case where the syncronous code constructs an object
+        #   Consider the case where the synchronous code constructs an object
         #   and the async task updates it, if we roll back everything
         #   then also the original content construction goes away
         #   (even if, in and by itself, worked)
@@ -158,11 +156,8 @@ class AfterCommitTask(Task):
             return result_
 
     def _apply_async(self, args, kw, result_, celery, task_id, options):
-        effective_result = super(AfterCommitTask, self).apply_async(
-            args=args,
-            kwargs=kw,
-            task_id=task_id,
-            **options
+        effective_result = super().apply_async(
+            args=args, kwargs=kw, task_id=task_id, **options
         )
         if celery.conf.task_always_eager:
             result_._state = effective_result._state
@@ -173,7 +168,7 @@ class AfterCommitTask(Task):
                 effective_result._result,
                 effective_result._state,
                 traceback=result_.traceback,
-                request=self.request
+                request=self.request,
             )
             return result_
         return effective_result

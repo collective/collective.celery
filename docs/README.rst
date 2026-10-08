@@ -69,7 +69,7 @@ Example::
         pass
 
 
-And to schedule the taks::
+And to schedule the tasks::
 
     my_content_object = self.context
     do_something.delay(my_content_object, 'something', foo='bar')
