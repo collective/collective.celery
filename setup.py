@@ -43,5 +43,8 @@ setup(name='collective.celery',
 
       [console_scripts]
       pcelery = collective.celery.scripts.ccelery:main
+
+      [celery.result_backends]
+      zodb = collective.celery.backends.zodb:ZODBBackend
       """,
       )

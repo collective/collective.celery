@@ -1,5 +1,5 @@
 from plone.app.testing import PloneSandboxLayer, PLONE_FIXTURE, \
-    IntegrationTesting
+    FunctionalTesting, IntegrationTesting
 from plone.testing.zope import installProduct, uninstallProduct
 from zope.configuration import xmlconfig
 from plone.app.testing import applyProfile
@@ -31,4 +31,9 @@ COLLECTIVE_CELERY_FIXTURE = CollectiveCeleryLayer()
 COLLECTIVE_CELERY_INTEGRATION_TESTING = IntegrationTesting(
     bases=(COLLECTIVE_CELERY_FIXTURE,),
     name="CollectiveCeleryLayer:Integration"
+)
+
+COLLECTIVE_CELERY_FUNCTIONAL_TESTING = FunctionalTesting(
+    bases=(COLLECTIVE_CELERY_FIXTURE,),
+    name="CollectiveCeleryLayer:Functional"
 )
