@@ -7,6 +7,12 @@ Changelog
 - Add a ZODB result backend. Set ``CELERY_RESULT_BACKEND zodb://`` to store task
   states in the ZODB of the site, so that any process can read them.
 
+- Add the tox and GitHub Actions configuration of plone/meta: tests on
+  Plone 6.0, 6.1 and 6.2, coverage report, linters, dependency and release
+  checks. Format the code with black and isort. Declare every dependency.
+  Use a PEP 420 namespace package for ``collective``. Remove the Plone 4
+  buildout files.
+
 - Support Plone 6.2 and Python 3 only: always start Zope with
   ``configure_wsgi`` and remove the ``six`` import.
 
