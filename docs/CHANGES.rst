@@ -13,6 +13,9 @@ Changelog
   Use a PEP 420 namespace package for ``collective``. Remove the Plone 4
   buildout files.
 
+- Remove the Sphinx documentation in ``docs``. ``README.md`` documents the
+  package.
+
 - Support Plone 6.2 and Python 3 only: always start Zope with
   ``configure_wsgi`` and remove the ``six`` import.
 
