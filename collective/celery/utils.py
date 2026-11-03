@@ -8,7 +8,6 @@ import sys
 import threading
 import Zope2
 
-
 try:
     # Celery >= 3.1
     from celery import current_app as registry
@@ -19,57 +18,70 @@ except ImportError:
 _local = threading.local()
 
 
-def _bool(term, table={"false": False, "no": False, "0": False,
-                       "true": True, "yes": True, "1": True}):
+def _bool(
+    term,
+    table={
+        "false": False,
+        "no": False,
+        "0": False,
+        "true": True,
+        "yes": True,
+        "1": True,
+    },
+):
     try:
         return table[term.lower()]
     except KeyError:
-        raise TypeError("Can't coerce %r to type bool" % (term, ))
+        raise TypeError(f"Can't coerce {term!r} to type bool")
 
 
 _types = {
-    'any': (object, None),
-    'bool': (bool, _bool),
-    'dict': (dict, eval),
-    'float': (float, float),
-    'int': (int, int),
-    'list': (list, eval),
-    'tuple': (tuple, eval),
-    'string': (str, str),
-    'str': (str, str),
+    "any": (object, None),
+    "bool": (bool, _bool),
+    "dict": (dict, eval),
+    "float": (float, float),
+    "int": (int, int),
+    "list": (list, eval),
+    "tuple": (tuple, eval),
+    "string": (str, str),
+    "str": (str, str),
 }
 
-_options = dict(
-    (key, _types[opt.type])
+_options = {
+    key: _types[opt.type]
     for key, opt in defaults.flatten(defaults.NAMESPACES)
     if opt.type in _types
-)
-
-_defaults = {
-    'task_serializer': 'pickle',
-    'result_serializer': 'pickle',
-    'accept_content': ['application/json', 'application/x-python-serialize']
 }
 
-_object_marker = 'object://'
+_defaults = {
+    "task_serializer": "pickle",
+    "result_serializer": "pickle",
+    "accept_content": ["application/json", "application/x-python-serialize"],
+}
+
+_object_marker = "object://"
 
 
 def getCeleryOptions():
     zconfig = getConfiguration()
     environ = os.environ.copy()
-    if hasattr(zconfig, 'environment'):
+    if hasattr(zconfig, "environment"):
         # the zope.conf environment overrides os.environ
         environ.update(zconfig.environment.copy())
 
     config = _defaults.copy()
     for key, value in environ.items():
         # b/w interpret settings for latest celery
-        key = key.replace('CELERY_', '').replace(
-            'CELERYBEAT_', 'beat_').replace('CELERYD_', 'worker_').lower()
+        key = (
+            key.replace("CELERY_", "")
+            .replace("CELERYBEAT_", "beat_")
+            .replace("CELERYD_", "worker_")
+            .lower()
+        )
         opt_type = _options.get(key)
         if opt_type:
             if opt_type[0] == str:
-                value = value.replace('"', '')
+                value = value.replace('"', "")
             elif opt_type[0] is object:
                 try:
                     value = eval(value)
@@ -86,14 +98,14 @@ def _getCelery():
     # delete cached property in order to get them reloaded from the new conf
     backend = celery.backend
     for name, task in registry.tasks.items():
-        # ensure that every already registed tasks doens use an unconfigured
+        # ensure that every already registered task does not use an unconfigured
         # backend.
         task.backend = backend
     return celery
 
 
 def getCelery():
-    if not hasattr(_local, 'celery'):
+    if not hasattr(_local, "celery"):
         _local.celery = _getCelery()
     return _local.celery
 
@@ -109,7 +121,7 @@ def getApp(*args, **kwargs):
         pass
     if Zope2.bobo_application is None:
         orig_argv = sys.argv
-        sys.argv = ['']
+        sys.argv = [""]
         res = Zope2.app(*args, **kwargs)
         sys.argv = orig_argv
         return res
@@ -120,15 +132,13 @@ def getApp(*args, **kwargs):
 
 def _serialize_arg(val):
     if IItem.providedBy(val):
-        val = '%s%s' % (
-            _object_marker,
-            '/'.join(val.getPhysicalPath()))
+        val = "{}{}".format(_object_marker, "/".join(val.getPhysicalPath()))
     return val
 
 
 def _deserialize_arg(site, val):
     if isinstance(val, str):
         if val.startswith(_object_marker):
-            val = val[len(_object_marker):]
+            val = val[len(_object_marker) :]
             val = site.unrestrictedTraverse(val)
     return val

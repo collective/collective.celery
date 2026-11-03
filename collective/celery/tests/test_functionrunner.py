@@ -1,27 +1,28 @@
+from ..functionrunner import AdminFunctionRunner
+from ..functionrunner import AuthorizedFunctionRunner
+from ..functionrunner import FunctionRunner
+from .base import BaseTestCase
 from celery.app.task import TaskType
 from plone.app.testing import SITE_OWNER_NAME
 from zope.component import eventtesting
-
-from .base import BaseTestCase
-from ..functionrunner import FunctionRunner, AuthorizedFunctionRunner, AdminFunctionRunner
 
 
 class BaseFunctionRunnerTestCase(BaseTestCase):
 
     def setUp(self):
-        super(BaseFunctionRunnerTestCase, self).setUp()
+        super().setUp()
         eventtesting.setUp()
 
         def dummy_func(*args, **kwargs):
-            return 'Bar'
+            return "Bar"
 
         self.dummy_func = dummy_func
-        self.args = ['foo', 'bar']
+        self.args = ["foo", "bar"]
         self.kwargs = {
-            'authorized_userid': SITE_OWNER_NAME,
-            'site_path': '/plone',
+            "authorized_userid": SITE_OWNER_NAME,
+            "site_path": "/plone",
         }
-        self.task_kwargs={'baz': 1}
+        self.task_kwargs = {"baz": 1}
         self.frunner = FunctionRunner(
             func=self.dummy_func,
             new_func=self.dummy_func,
@@ -60,7 +61,7 @@ class TestFunctionRunner(BaseFunctionRunnerTestCase):
 class TestAuthorizedFunctionRunner(BaseFunctionRunnerTestCase):
 
     def setUp(self):
-        super(TestAuthorizedFunctionRunner, self).setUp()
+        super().setUp()
         self.frunner = AuthorizedFunctionRunner(
             func=self.dummy_func,
             new_func=self.dummy_func,
@@ -83,7 +84,7 @@ class TestAuthorizedFunctionRunner(BaseFunctionRunnerTestCase):
 class TestAdminFunctionRunner(BaseFunctionRunnerTestCase):
 
     def setUp(self):
-        super(TestAdminFunctionRunner, self).setUp()
+        super().setUp()
         self.frunner = AdminFunctionRunner(
             func=self.dummy_func,
             new_func=self.dummy_func,

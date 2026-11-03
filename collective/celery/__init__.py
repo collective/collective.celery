@@ -1,7 +1,5 @@
-# -*- encoding: utf-8 -*-
 # This is all pulled out of David Glick's gist on github
 # https://gist.githubusercontent.com/davisagli/5824662/raw/de6ac44c1992ead62d7d98be96ad1b55ed4884af/gistfile1.py
-import weakref
 from .base_task import AfterCommitTask
 from celery import current_app
 from celery.signals import after_task_publish
@@ -9,6 +7,7 @@ from collective.celery.functionrunner import AdminFunctionRunner
 from collective.celery.functionrunner import AuthorizedFunctionRunner
 from collective.celery.utils import getCelery
 
+import weakref
 
 TESTING = False
 
@@ -25,7 +24,7 @@ def initialize(context):
     pass
 
 
-class _task(object):
+class _task:
     """Decorator of celery tasks that should be run in a Zope context.
 
     The decorator function takes a path as a first argument,
@@ -40,13 +39,17 @@ class _task(object):
     def __call__(self, **task_kw):
         def decorator(func):
             def new_func(*args, **kw):
-                runner = AuthorizedFunctionRunner(func, new_func, args, kw, task_kw)  # noqa
+                runner = AuthorizedFunctionRunner(
+                    func, new_func, args, kw, task_kw
+                )  # noqa
                 return runner()
+
             _copy_name(func, new_func)
             task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
-            if not task_kw.get('bind'):
+            if not task_kw.get("bind"):
                 new_func._task = weakref.ref(task)
             return task
+
         return decorator
 
     def as_admin(self, **task_kw):
@@ -54,11 +57,13 @@ class _task(object):
             def new_func(*args, **kw):
                 runner = AdminFunctionRunner(func, new_func, args, kw, task_kw)
                 return runner()
+
             _copy_name(func, new_func)
             task = getCelery().task(base=AfterCommitTask, **task_kw)(new_func)
-            if not task_kw.get('bind'):
+            if not task_kw.get("bind"):
                 new_func._task = weakref.ref(task)
             return task
+
         return decorator
 
 
@@ -88,4 +93,4 @@ def update_sent_state(sender=None, body=None, **kwargs):
     task = current_app.tasks.get(sender)
     if task is None:
         return
-    task.update_state(task_id=kwargs['headers']['id'], state="SENT")
+    task.update_state(task_id=kwargs["headers"]["id"], state="SENT")

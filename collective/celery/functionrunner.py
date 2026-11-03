@@ -1,25 +1,28 @@
-import traceback
-
-import transaction
-from AccessControl.SecurityManagement import (newSecurityManager,
-                                              noSecurityManager)
+from AccessControl.SecurityManagement import newSecurityManager
+from AccessControl.SecurityManagement import noSecurityManager
 from celery import Task
 from celery.exceptions import Retry
 from celery.utils.log import get_task_logger
 from collective.celery.base_task import AfterCommitTask
-from collective.celery.utils import _deserialize_arg, getApp, getCelery
+from collective.celery.utils import _deserialize_arg
+from collective.celery.utils import getApp
+from collective.celery.utils import getCelery
 from plone import api
 from Testing.makerequest import makerequest
 from ZODB.POSException import ConflictError
 from zope.component.hooks import setSite
 from zope.event import notify
-from zope.globalrequest import clearRequest, setRequest
+from zope.globalrequest import clearRequest
+from zope.globalrequest import setRequest
 from zope.traversing.interfaces import BeforeTraverseEvent
+
+import traceback
+import transaction
 
 logger = get_task_logger(__name__)
 
 
-class FunctionRunner(object):
+class FunctionRunner:
 
     base_task = AfterCommitTask
     app = None
@@ -49,9 +52,9 @@ class FunctionRunner(object):
         pass
 
     def _run(self):
-        if 'authorized_userid' in self.orig_kw:
-            self.userid = self.orig_kw.pop('authorized_userid')
-        site_path = self.orig_kw.pop('site_path')
+        if "authorized_userid" in self.orig_kw:
+            self.userid = self.orig_kw.pop("authorized_userid")
+        site_path = self.orig_kw.pop("site_path")
         try:
             self.site = api.portal.get()
         except api.exc.CannotGetPortalError:
@@ -72,7 +75,7 @@ class FunctionRunner(object):
             return self._run()
 
         self.app = makerequest(getApp())
-        self.app.REQUEST['PARENTS'] = [self.app]
+        self.app.REQUEST["PARENTS"] = [self.app]
         setRequest(self.app.REQUEST)
 
         transaction.begin()
@@ -85,8 +88,10 @@ class FunctionRunner(object):
             except ConflictError as e:
                 # On ZODB conflicts, retry using celery's mechanism
                 transaction.abort()
-                logger.warn('ConflictError running task, attempting retry: %s' %
-                            traceback.format_exc())
+                logger.warn(
+                    "ConflictError running task, attempting retry: %s"
+                    % traceback.format_exc()
+                )
                 # Retry generally only works within a task context or from the
                 # task itself
                 task = None
@@ -97,7 +102,7 @@ class FunctionRunner(object):
                 else:
                     # Out task decorator adds a task weakref to unbound task
                     # functions, check for that
-                    task_ref = getattr(self.new_func, '_task', None)
+                    task_ref = getattr(self.new_func, "_task", None)
                     if callable(task_ref):
                         task = task_ref()
                 if isinstance(task, Task):
@@ -105,7 +110,7 @@ class FunctionRunner(object):
                 # This will set the task state to Retry, but won't retry it
                 raise Retry(exc=e)
             except Exception:
-                logger.warn('Error running task: %s' % traceback.format_exc())
+                logger.warn("Error running task: %s" % traceback.format_exc())
                 transaction.abort()
                 raise
         finally:
@@ -145,6 +150,6 @@ class AdminFunctionRunner(AuthorizedFunctionRunner):
 
         # set up admin user
         # XXX need to search for an admin like user otherwise?
-        user = api.user.get(userid='admin').getUser()
+        user = api.user.get(userid="admin").getUser()
         if user:
             newSecurityManager(None, user)

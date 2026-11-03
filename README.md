@@ -5,6 +5,7 @@
 <p align="center">
   <a href="https://www.python.org/"><img alt="Python 3.10 or later" src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white"></a>
   <a href="https://plone.org/"><img alt="Plone 6.0, 6.1 and 6.2" src="https://img.shields.io/badge/Plone-6.0%20%7C%206.1%20%7C%206.2-009AD1"></a>
+  <a href="https://github.com/collective/collective.celery/actions/workflows/test-matrix.yml"><img alt="Tests" src="https://github.com/collective/collective.celery/actions/workflows/test-matrix.yml/badge.svg"></a>
   <a href="https://docs.celeryq.dev/"><img alt="Celery 5" src="https://img.shields.io/badge/Celery-5-37814A?logo=celery&logoColor=white"></a>
   <a href="LICENSE.txt"><img alt="License GPL 2.0" src="https://img.shields.io/badge/license-GPL--2.0-lightgrey"></a>
 </p>
@@ -291,11 +292,16 @@ class TestTasks(unittest.TestCase):
 
 ### Running the tests of this package
 
-With a buildout that has a test runner part for `collective.celery[test]`:
+The package uses [tox](https://tox.wiki/) with the configuration of [plone/meta](https://github.com/plone/meta). Run the tests on one combination of Plone and Python, or on all of them:
 
 ```
-bin/test -s collective.celery
+uvx --with tox-uv tox -e py312-plone62
+uvx --with tox-uv tox
 ```
+
+`tox list` shows every environment. `tox -e coverage` writes a coverage report to the terminal and to `htmlcov/`. `tox -e lint` runs the linters, `tox -e format` reformats the code and `tox -e dependencies` checks that `setup.py` declares every import.
+
+GitHub Actions runs the same environments on every push: the test matrix of Plone 6.0, 6.1 and 6.2, the coverage report in the job summary, the linters, the dependency check and the release check.
 
 ## Broker notes
 
