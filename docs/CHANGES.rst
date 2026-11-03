@@ -4,6 +4,9 @@ Changelog
 2.0.0 (unreleased)
 ------------------
 
+- Add a ZODB result backend. Set ``CELERY_RESULT_BACKEND zodb://`` to store task
+  states in the ZODB of the site, so that any process can read them.
+
 - Support Plone 6.2 and Python 3 only: always start Zope with
   ``configure_wsgi`` and remove the ``six`` import.
 

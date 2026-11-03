@@ -75,7 +75,7 @@ eggs =
     my.package
 environment-vars =
     CELERY_BROKER_URL amqp://guest:guest@localhost:5672//
-    CELERY_RESULT_BACKEND rpc://
+    CELERY_RESULT_BACKEND zodb://
     CELERY_TASKS my.package.tasks
 
 [celery]
@@ -112,13 +112,25 @@ Any other Celery setting works the same way, for example:
 ```ini
 environment-vars =
     CELERY_BROKER_URL amqp://guest:guest@localhost:5672//
-    CELERY_RESULT_BACKEND rpc://
+    CELERY_RESULT_BACKEND zodb://
     CELERY_TASKS my.package.tasks
     CELERY_WORKER_CONCURRENCY 2
     CELERY_TASK_DEFAULT_QUEUE default
     CELERY_TASK_ROUTES {'my.package.tasks.rebuild_index': {'queue': 'slow'}}
     CELERYBEAT_SCHEDULE_FILENAME ${buildout:directory}/var/celerybeat-schedule
 ```
+
+### ZODB result backend
+
+`zodb://` stores the state and result of every task in the ZODB of the site. The data lives in a BTree at the root of the database, beside the Zope application object. It is not visible in the ZMI. Any process that opens the database can read the states: the instance, the worker, beat or a script. A view that polls task states needs this, and it needs no extra service.
+
+The URL must be exactly `zodb://`. Any other value raises `ImproperlyConfigured`. The `rpc://` backend stays available, but it only serves the process that sent the task, one time.
+
+A state change is one small commit, about 7 ms over a local ZEO server. A task makes two state changes: SENT when it is published, and SUCCESS or FAILURE when it ends. The first state of a task also updates one bucket of the index. A FileStorage or a history-preserving RelStorage keeps every revision until you pack the database, so pack it regularly. A history-free RelStorage replaces the rows in place.
+
+The `result_expires` setting bounds how long results stay. The Celery default is one day. Celery beat runs the built-in task `celery.backend_cleanup` every day at 4:00 to delete the expired entries. Beat must run for the expiry to happen.
+
+Every read and write uses its own database connection and transaction. The backend never joins the transaction of the request or of the task. Concurrent writes that conflict are retried three times. RelStorage works the same way: its row lock errors are retried like ZODB conflicts.
 
 ## Writing tasks
 
@@ -295,7 +307,7 @@ environment-vars =
     CELERY_EVENT_QUEUE_DURABLE true
 ```
 
-With the `rpc://` result backend, only the process that sent a task can read its result, and only one time. A browser view that polls task states from another process needs a database or cache backend.
+With the `rpc://` result backend, only the process that sent a task can read its result, and only one time. A browser view that polls task states from another process needs a backend that other processes can read, such as `zodb://`.
 
 ## Troubleshooting
 
