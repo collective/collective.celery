@@ -1,15 +1,12 @@
 from setuptools import setup, find_packages
-import os
 
 version = '2.0.0.dev0'
 
 setup(name='collective.celery',
       version=version,
       description="Celery for Plone",
-      long_description="%s\n%s" % (
-          open("README.rst").read(),
-          open(os.path.join("docs", "CHANGES.rst")).read()
-      ),
+      long_description=open("README.md").read(),
+      long_description_content_type="text/markdown",
       # Get more strings from
       # http://pypi.python.org/pypi?:action=list_classifiers
       classifiers=[
